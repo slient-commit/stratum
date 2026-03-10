@@ -1,0 +1,1519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stratum Documentation</title>
+  <style>
+    :root {
+      --bg: #0c0d12;
+      --surface: #14151f;
+      --surface-2: #1c1d2b;
+      --border: #2a2c3e;
+      --text: #e2e4f0;
+      --text-muted: #8b8ea3;
+      --primary: #6366f1;
+      --primary-dim: rgba(99,102,241,0.12);
+      --green: #22c55e;
+      --green-dim: rgba(34,197,94,0.12);
+      --amber: #f59e0b;
+      --amber-dim: rgba(245,158,11,0.12);
+      --red: #ef4444;
+      --red-dim: rgba(239,68,68,0.12);
+      --cyan: #06b6d4;
+      --cyan-dim: rgba(6,182,212,0.12);
+      --code-bg: #0a0b10;
+      --radius: 8px;
+      --sidebar-w: 280px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Inter, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    /* ── Layout ─────────────────────────── */
+    .layout {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* ── Sidebar ────────────────────────── */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      position: fixed;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+      padding: 24px 0;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: 0 24px 20px;
+      font-size: 20px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 16px;
+    }
+
+    .sidebar-logo span {
+      color: var(--primary);
+    }
+
+    .sidebar nav {
+      padding: 0 12px;
+    }
+
+    .sidebar .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      padding: 16px 12px 6px;
+      font-weight: 600;
+    }
+
+    .sidebar a {
+      display: block;
+      padding: 7px 12px;
+      border-radius: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13.5px;
+      transition: all 0.15s;
+    }
+
+    .sidebar a:hover {
+      background: var(--surface-2);
+      color: var(--text);
+    }
+
+    .sidebar a.active {
+      background: var(--primary-dim);
+      color: var(--primary);
+      font-weight: 500;
+    }
+
+    /* ── Main ───────────────────────────── */
+    .main {
+      margin-left: var(--sidebar-w);
+      flex: 1;
+      max-width: 860px;
+      padding: 48px 56px 80px;
+    }
+
+    /* ── Typography ─────────────────────── */
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    h2 {
+      font-size: 22px;
+      font-weight: 600;
+      margin-top: 56px;
+      margin-bottom: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h3 {
+      font-size: 17px;
+      font-weight: 600;
+      margin-top: 36px;
+      margin-bottom: 12px;
+    }
+
+    h4 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-top: 24px;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+    }
+
+    p {
+      margin-bottom: 14px;
+      color: var(--text);
+    }
+
+    .subtitle {
+      font-size: 17px;
+      color: var(--text-muted);
+      margin-bottom: 40px;
+    }
+
+    a { color: var(--primary); }
+
+    strong { font-weight: 600; }
+
+    hr {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 48px 0;
+    }
+
+    /* ── Code ───────────────────────────── */
+    code {
+      font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
+      font-size: 13px;
+      background: var(--code-bg);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    pre {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      overflow-x: auto;
+      margin: 12px 0 20px;
+      line-height: 1.6;
+    }
+
+    pre code {
+      background: none;
+      border: none;
+      padding: 0;
+      font-size: 13px;
+    }
+
+    .code-title {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-bottom: none;
+      border-radius: var(--radius) var(--radius) 0 0;
+      padding: 8px 16px;
+      font-size: 12px;
+      font-family: 'SF Mono', Consolas, monospace;
+      color: var(--text-muted);
+      margin-top: 12px;
+    }
+
+    .code-title + pre {
+      margin-top: 0;
+      border-radius: 0 0 var(--radius) var(--radius);
+    }
+
+    /* ── Tables ─────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0 24px;
+      font-size: 14px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    th {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      font-weight: 600;
+      background: var(--surface);
+    }
+
+    tr:hover td {
+      background: rgba(255,255,255,0.01);
+    }
+
+    /* ── Badges ─────────────────────────── */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-get { background: var(--green-dim); color: var(--green); }
+    .badge-post { background: var(--amber-dim); color: var(--amber); }
+    .badge-delete { background: var(--red-dim); color: var(--red); }
+    .badge-service { background: var(--cyan-dim); color: var(--cyan); }
+    .badge-event { background: var(--primary-dim); color: var(--primary); }
+
+    /* ── Cards ──────────────────────────── */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 12px;
+      margin: 16px 0 24px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+    }
+
+    .card h4 {
+      margin-top: 0;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 15px;
+    }
+
+    .card p {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 0;
+    }
+
+    /* ── Callout ────────────────────────── */
+    .callout {
+      border-left: 3px solid var(--primary);
+      background: var(--primary-dim);
+      padding: 14px 18px;
+      border-radius: 0 var(--radius) var(--radius) 0;
+      margin: 16px 0;
+      font-size: 14px;
+    }
+
+    .callout-warn {
+      border-left-color: var(--amber);
+      background: var(--amber-dim);
+    }
+
+    .callout strong {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    /* ── Diagram ────────────────────────── */
+    .diagram {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px;
+      margin: 20px 0;
+      text-align: center;
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      white-space: pre;
+      overflow-x: auto;
+    }
+
+    /* ── Lifecycle ──────────────────────── */
+    .lifecycle {
+      display: flex;
+      gap: 0;
+      margin: 20px 0 28px;
+      flex-wrap: wrap;
+    }
+
+    .lifecycle-step {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .lifecycle-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .lifecycle-arrow {
+      color: var(--text-muted);
+      padding: 0 8px;
+      font-size: 18px;
+    }
+
+    .lifecycle-box.active {
+      border-color: var(--primary);
+      background: var(--primary-dim);
+      color: var(--primary);
+    }
+
+    /* ── File Tree ──────────────────────── */
+    .file-tree {
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px 24px;
+      font-family: 'SF Mono', Consolas, monospace;
+      font-size: 13px;
+      line-height: 1.8;
+      margin: 12px 0 24px;
+      overflow-x: auto;
+    }
+
+    .file-tree .dir { color: var(--primary); }
+    .file-tree .file { color: var(--text-muted); }
+    .file-tree .comment { color: #555; }
+
+    /* ── Responsive ─────────────────────── */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main { margin-left: 0; padding: 32px 24px; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- ════════ SIDEBAR ════════ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span>S</span>tratum</div>
+    <nav>
+      <div class="section-title">Getting Started</div>
+      <a href="#overview">Overview</a>
+      <a href="#quickstart">Quick Start</a>
+      <a href="#project-structure">Project Structure</a>
+
+      <div class="section-title">Architecture</div>
+      <a href="#kernel">Kernel</a>
+      <a href="#module-contract">Module Contract</a>
+      <a href="#lifecycle">Lifecycle</a>
+      <a href="#context">Context Object</a>
+      <a href="#services">Service Registry</a>
+      <a href="#events">Event Bus</a>
+      <a href="#config">Configuration</a>
+
+      <div class="section-title">Built-in Modules</div>
+      <a href="#mod-db-sqlite">module-db-sqlite</a>
+      <a href="#mod-api">module-api</a>
+      <a href="#mod-auth">module-auth</a>
+      <a href="#mod-rbac">module-rbac</a>
+      <a href="#mod-dashboard">module-dashboard</a>
+      <a href="#mod-firebase">module-firebase</a>
+      <a href="#mod-ui-shell">ui-shell</a>
+
+      <div class="section-title">Guides</div>
+      <a href="#creating-module">Creating a Module</a>
+      <a href="#frontend-plugins">Frontend Plugins</a>
+      <a href="#firebase-modes">Firebase Modes</a>
+      <a href="#api-reference">API Reference</a>
+    </nav>
+  </aside>
+
+  <!-- ════════ MAIN CONTENT ════════ -->
+  <main class="main">
+
+    <!-- ──── OVERVIEW ──── -->
+    <section id="overview">
+      <h1>Stratum Documentation</h1>
+      <p class="subtitle">
+        A modular core framework for building domain-specific applications with Node.js and React.
+        Everything is a module. Everything can be swapped.
+      </p>
+
+      <div class="card-grid">
+        <div class="card">
+          <h4>Fully Modular</h4>
+          <p>Database, auth, API, UI &mdash; every capability is a self-contained module that can be enabled or disabled in one config file.</p>
+        </div>
+        <div class="card">
+          <h4>Service-Oriented</h4>
+          <p>Modules communicate through a shared service registry and event bus. No hard-wired imports between modules.</p>
+        </div>
+        <div class="card">
+          <h4>Lifecycle-Driven</h4>
+          <p>Modules go through ordered phases &mdash; register, init, start, stop, destroy &mdash; with automatic dependency resolution.</p>
+        </div>
+        <div class="card">
+          <h4>Swap-Ready</h4>
+          <p>Replace SQLite with Firestore, JWT auth with Firebase Auth &mdash; downstream modules work without code changes.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ──── QUICK START ──── -->
+    <section id="quickstart">
+      <h2>Quick Start</h2>
+
+      <h4>1. Install</h4>
+<pre><code>npm install</code></pre>
+
+      <h4>2. Start Backend</h4>
+<pre><code>node index.js</code></pre>
+      <p>This boots the Kernel, loads all enabled modules, runs migrations, and starts Express on port <code>3001</code>.</p>
+
+      <h4>3. Start Frontend</h4>
+<pre><code>npm run dev:ui</code></pre>
+      <p>Vite dev server on port <code>3000</code>, proxied to the backend. Open <code>http://localhost:3000</code>.</p>
+
+      <h4>4. Test the API</h4>
+<pre><code># Register
+curl -X POST http://localhost:3001/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","email":"admin@test.com","password":"secret123"}'
+
+# Login
+curl -X POST http://localhost:3001/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"secret123"}'
+
+# Get current user (use the token from login)
+curl http://localhost:3001/api/auth/me \
+  -H "Authorization: Bearer &lt;token&gt;"</code></pre>
+    </section>
+
+    <hr>
+
+    <!-- ──── PROJECT STRUCTURE ──── -->
+    <section id="project-structure">
+      <h2>Project Structure</h2>
+
+      <div class="file-tree">
+<span class="dir">Stratum/</span>
+├── index.js                      <span class="comment"># Boot entry point</span>
+├── stratum.config.js             <span class="comment"># Module configuration</span>
+├── package.json                  <span class="comment"># npm workspaces root</span>
+│
+└── <span class="dir">packages/</span>
+    ├── <span class="dir">core/</span>                     <span class="comment"># Kernel &amp; core infrastructure</span>
+    │   └── <span class="dir">lib/</span>
+    │       ├── <span class="file">Kernel.js</span>         <span class="comment"># Orchestrator</span>
+    │       ├── <span class="file">ModuleLoader.js</span>   <span class="comment"># Load, validate, topo-sort</span>
+    │       ├── <span class="file">LifecycleManager.js</span> <span class="comment"># Phase execution</span>
+    │       ├── <span class="file">ConfigManager.js</span>  <span class="comment"># Config merging</span>
+    │       ├── <span class="file">EventBus.js</span>       <span class="comment"># Pub/sub</span>
+    │       └── <span class="file">ServiceRegistry.js</span> <span class="comment"># Named service store</span>
+    │
+    ├── <span class="dir">module-db-sqlite/</span>        <span class="comment"># SQLite adapter</span>
+    ├── <span class="dir">module-api/</span>              <span class="comment"># Express HTTP server</span>
+    ├── <span class="dir">module-auth/</span>             <span class="comment"># JWT authentication</span>
+    ├── <span class="dir">module-rbac/</span>             <span class="comment"># Role-based access control</span>
+    ├── <span class="dir">module-dashboard/</span>        <span class="comment"># Sample dashboard</span>
+    ├── <span class="dir">module-firebase/</span>         <span class="comment"># Firebase suite</span>
+    │   └── <span class="dir">lib/</span>
+    │       ├── <span class="file">firestore-db.js</span>  <span class="comment"># Firestore → db adapter</span>
+    │       ├── <span class="file">firebase-auth.js</span> <span class="comment"># Firebase Auth services</span>
+    │       └── <span class="file">firebase-storage.js</span> <span class="comment"># Cloud Storage wrapper</span>
+    │
+    └── <span class="dir">ui-shell/</span>                <span class="comment"># React + Vite frontend</span>
+        └── <span class="dir">src/</span>
+            ├── <span class="file">App.jsx</span>
+            ├── <span class="file">AppRouter.jsx</span>    <span class="comment"># Dynamic plugin routing</span>
+            ├── <span class="file">AuthContext.jsx</span>  <span class="comment"># Auth state management</span>
+            ├── <span class="file">PluginContext.jsx</span> <span class="comment"># Plugin discovery</span>
+            ├── <span class="file">components.js</span>    <span class="comment"># Component registry</span>
+            ├── <span class="dir">layouts/</span>
+            │   └── <span class="file">MainLayout.jsx</span>
+            └── <span class="dir">pages/</span>
+                ├── <span class="file">LoginPage.jsx</span>
+                ├── <span class="file">DashboardPage.jsx</span>
+                └── <span class="file">RolesPage.jsx</span>
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ──── KERNEL ──── -->
+    <section id="kernel">
+      <h2>Kernel</h2>
+      <p>The Kernel is the central orchestrator. It wires together the ConfigManager, ModuleLoader, EventBus, ServiceRegistry, and LifecycleManager.</p>
+
+      <h3>Boot Sequence</h3>
+      <div class="diagram">
+stratum.config.js
+       │
+       ▼
+┌─────────────┐     ┌──────────────┐     ┌────────────────────┐
+│ ConfigManager│────▶│ ModuleLoader │────▶│ LifecycleManager   │
+│ (parse config)│    │ (require,    │     │ (run phases with   │
+│              │     │  validate,   │     │  context for each  │
+│              │     │  topo-sort)  │     │  module)           │
+└─────────────┘     └──────────────┘     └────────────────────┘
+                                                  │
+                                    ┌─────────────┼──────────────┐
+                                    ▼             ▼              ▼
+                               register()    init()         start()
+                                    │             │              │
+                                    ▼             ▼              ▼
+                             declare services  connect DBs   mount routes
+                             set up events     run migrations go live
+      </div>
+
+      <div class="code-title">index.js</div>
+<pre><code>const { Kernel } = require('@stratum/core');
+const config = require('./stratum.config');
+
+const kernel = new Kernel(config);
+
+kernel.boot().catch((err) => {
+  console.error('[stratum] Fatal error during boot:', err);
+  process.exit(1);
+});</code></pre>
+    </section>
+
+    <hr>
+
+    <!-- ──── MODULE CONTRACT ──── -->
+    <section id="module-contract">
+      <h2>Module Contract</h2>
+      <p>Every Stratum module exports an object with a <code>name</code>, <code>version</code>, optional <code>dependencies</code>, and lifecycle methods.</p>
+
+      <div class="code-title">packages/module-example/index.js</div>
+<pre><code>module.exports = {
+  name: 'module-example',
+  version: '1.0.0',
+  dependencies: ['module-db-sqlite', 'module-api'],
+
+  // Optional: UI plugin metadata
+  ui: {
+    routes: [{ path: '/example', component: 'ExamplePage' }],
+    nav: [{ label: 'Example', path: '/example', icon: 'Zap' }],
+  },
+
+  async register(context) { },   // Declare services &amp; config
+  async init(context) { },       // Connect resources, migrations
+  async start(context) { },      // Mount routes, go live
+  async stop(context) { },       // Graceful shutdown
+  async destroy(context) { },    // Cleanup
+};</code></pre>
+
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>name</code></td><td>string</td><td>Yes</td><td>Unique module identifier</td></tr>
+          <tr><td><code>version</code></td><td>string</td><td>Yes</td><td>Semver version string</td></tr>
+          <tr><td><code>dependencies</code></td><td>string[]</td><td>No</td><td>Module names this depends on (used for load ordering)</td></tr>
+          <tr><td><code>ui</code></td><td>object</td><td>No</td><td>UI plugin metadata (routes, nav items, slots)</td></tr>
+          <tr><td><code>register</code></td><td>async fn</td><td>No</td><td>Declare services and configuration schemas</td></tr>
+          <tr><td><code>init</code></td><td>async fn</td><td>No</td><td>Connect to databases, run migrations</td></tr>
+          <tr><td><code>start</code></td><td>async fn</td><td>No</td><td>Mount routes, start listeners</td></tr>
+          <tr><td><code>stop</code></td><td>async fn</td><td>No</td><td>Stop accepting work, flush buffers</td></tr>
+          <tr><td><code>destroy</code></td><td>async fn</td><td>No</td><td>Close connections, free resources</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── LIFECYCLE ──── -->
+    <section id="lifecycle">
+      <h2>Lifecycle</h2>
+      <p>Modules go through ordered phases. The Kernel runs each phase across all modules (in dependency order) before moving to the next.</p>
+
+      <div class="lifecycle">
+        <div class="lifecycle-step">
+          <div class="lifecycle-box">Load</div>
+          <span class="lifecycle-arrow">&rarr;</span>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-box active">register()</div>
+          <span class="lifecycle-arrow">&rarr;</span>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-box active">init()</div>
+          <span class="lifecycle-arrow">&rarr;</span>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-box active">start()</div>
+          <span class="lifecycle-arrow">&rarr;</span>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-box">stop()</div>
+          <span class="lifecycle-arrow">&rarr;</span>
+        </div>
+        <div class="lifecycle-step">
+          <div class="lifecycle-box">destroy()</div>
+        </div>
+      </div>
+
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Purpose</th><th>Example</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><strong>Load</strong></td><td>Require modules, validate contract, topological sort by dependencies</td><td>Internal &mdash; handled by ModuleLoader</td></tr>
+          <tr><td><strong>register()</strong></td><td>Declare services and register them in the service registry</td><td>Register <code>db</code> service, <code>auth.requireAuth</code> middleware</td></tr>
+          <tr><td><strong>init()</strong></td><td>Connect to databases, run migrations, prepare state</td><td>Open SQLite connection, create tables</td></tr>
+          <tr><td><strong>start()</strong></td><td>Mount HTTP routes, start event listeners, go live</td><td>Mount Express routers, start HTTP server</td></tr>
+          <tr><td><strong>stop()</strong></td><td>Stop accepting new work, flush buffers</td><td>Close HTTP server</td></tr>
+          <tr><td><strong>destroy()</strong></td><td>Release resources, close connections</td><td>Close database connection</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Shutdown order</strong>
+        On SIGINT/SIGTERM, <code>stop()</code> and <code>destroy()</code> run in <strong>reverse</strong> dependency order &mdash; the last module started is the first to stop.
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ──── CONTEXT ──── -->
+    <section id="context">
+      <h2>Context Object</h2>
+      <p>Every lifecycle method receives a <code>context</code> object scoped to the current module.</p>
+
+<pre><code>context = {
+  config,      // Module-specific options from stratum.config.js
+  services,    // ServiceRegistry instance
+  events,      // EventBus instance
+  logger,      // Scoped logger: context.logger.info('...')
+};</code></pre>
+
+      <table>
+        <thead>
+          <tr><th>Property</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>config</code></td><td>object</td><td>The <code>options</code> object from this module's entry in <code>stratum.config.js</code></td></tr>
+          <tr><td><code>services</code></td><td>ServiceRegistry</td><td>Register and retrieve named services</td></tr>
+          <tr><td><code>events</code></td><td>EventBus</td><td>Subscribe to and emit events</td></tr>
+          <tr><td><code>logger</code></td><td>object</td><td>Prefixed console logger (<code>info</code>, <code>warn</code>, <code>error</code>, <code>debug</code>)</td></tr>
+        </tbody>
+      </table>
+
+      <p>The config namespace is automatically derived from the module name: module <code>module-auth</code> reads config from <code>@stratum/module-auth</code> in <code>stratum.config.js</code>.</p>
+    </section>
+
+    <hr>
+
+    <!-- ──── SERVICES ──── -->
+    <section id="services">
+      <h2>Service Registry</h2>
+      <p>The service registry is the primary mechanism for inter-module communication. Modules register named services during the <code>register()</code> phase, and other modules consume them via <code>get()</code>.</p>
+
+<pre><code>// Register a service
+context.services.register('my.service', implementation);
+
+// Retrieve a service (throws if not found)
+const service = context.services.get('my.service');
+
+// Check if a service exists (useful for optional deps)
+if (context.services.has('db')) {
+  const db = context.services.get('db');
+}</code></pre>
+
+      <div class="callout-warn callout">
+        <strong>No duplicates</strong>
+        Registering a service with a name that already exists throws an error. Use <code>has()</code> to check first if needed.
+      </div>
+
+      <h3>All Registered Services</h3>
+      <table>
+        <thead>
+          <tr><th>Service</th><th>Registered By</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-service">db</span></td>
+            <td>module-db-sqlite</td>
+            <td>Database interface: <code>run()</code>, <code>get()</code>, <code>all()</code>, <code>exec()</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">api.app</span></td>
+            <td>module-api</td>
+            <td>Express app instance</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">api.registerRouter</span></td>
+            <td>module-api</td>
+            <td>Mount an Express router at a URL prefix</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">auth.verifyToken</span></td>
+            <td>module-auth</td>
+            <td>Verify a JWT token, returns decoded payload</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">auth.requireAuth</span></td>
+            <td>module-auth</td>
+            <td>Express middleware &mdash; checks Bearer token, sets <code>req.user</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">rbac.requireRole</span></td>
+            <td>module-rbac</td>
+            <td>Returns middleware that checks user has a specific role</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">firebase.admin</span></td>
+            <td>module-firebase</td>
+            <td>Firebase Admin SDK app instance</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">firebase.firestore</span></td>
+            <td>module-firebase</td>
+            <td>Firestore database instance</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">firebase.auth</span></td>
+            <td>module-firebase</td>
+            <td>Firebase Admin Auth instance</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">firebase.storage</span></td>
+            <td>module-firebase</td>
+            <td>Cloud Storage service (upload, download, delete, list)</td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-service">core.uiPlugins</span></td>
+            <td>Kernel</td>
+            <td>Aggregated UI plugin metadata from all modules</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── EVENTS ──── -->
+    <section id="events">
+      <h2>Event Bus</h2>
+      <p>The event bus provides async publish/subscribe for decoupled module communication.</p>
+
+<pre><code>// Subscribe to an event
+const unsub = context.events.on('user.created', async (user) => {
+  context.logger.info(`New user: ${user.username}`);
+});
+
+// Emit an event (handlers run sequentially, awaited)
+await context.events.emit('user.created', { id: 1, username: 'admin' });
+
+// Unsubscribe
+unsub();
+// or: context.events.off('user.created', handler);</code></pre>
+
+      <h3>Built-in Events</h3>
+      <table>
+        <thead>
+          <tr><th>Event</th><th>Emitted By</th><th>Payload</th><th>Listeners</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-event">user.created</span></td>
+            <td>module-auth</td>
+            <td><code>{ id, username, email }</code></td>
+            <td>module-rbac (assigns default role)</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── CONFIG ──── -->
+    <section id="config">
+      <h2>Configuration</h2>
+      <p>All module configuration lives in <code>stratum.config.js</code> at the project root.</p>
+
+      <div class="code-title">stratum.config.js</div>
+<pre><code>module.exports = {
+  modules: {
+    '@stratum/module-db-sqlite': {
+      enabled: true,
+      options: { filename: './data/stratum.db' },
+    },
+    '@stratum/module-api': {
+      enabled: true,
+      options: { port: 3001, cors: true },
+    },
+    '@stratum/module-auth': {
+      enabled: true,
+      options: { jwtSecret: 'change-me-in-production', tokenExpiry: '24h' },
+    },
+    '@stratum/module-rbac': {
+      enabled: true,
+      options: { defaultRole: 'user' },
+    },
+    '@stratum/module-dashboard': {
+      enabled: true,
+    },
+    '@stratum/module-firebase': {
+      enabled: false,
+      options: {
+        credential: './service-account.json',
+        // databaseURL: 'https://&lt;project&gt;.firebaseio.com',
+        // storageBucket: '&lt;project&gt;.appspot.com',
+      },
+    },
+  },
+};</code></pre>
+
+      <table>
+        <thead>
+          <tr><th>Field</th><th>Type</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>enabled</code></td><td>boolean</td><td>Set to <code>false</code> to disable a module without removing code. Defaults to <code>true</code>.</td></tr>
+          <tr><td><code>options</code></td><td>object</td><td>Module-specific settings, accessible via <code>context.config</code> in lifecycle methods.</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Dependency enforcement</strong>
+        If module A declares a dependency on module B, and module B is disabled, the Kernel will throw an error at boot time. This prevents runtime crashes from missing services.
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ════════════════════════════════════ -->
+    <!--          BUILT-IN MODULES           -->
+    <!-- ════════════════════════════════════ -->
+
+    <!-- ──── module-db-sqlite ──── -->
+    <section id="mod-db-sqlite">
+      <h2>module-db-sqlite</h2>
+      <p>SQLite database adapter using <code>better-sqlite3</code>. Registers the <code>db</code> service with a clean wrapper API.</p>
+
+      <h3>Services</h3>
+      <table>
+        <thead>
+          <tr><th>Method</th><th>Signature</th><th>Returns</th><th>Description</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>db.run</code></td><td><code>(sql, params?)</code></td><td><code>{ lastInsertRowid, changes }</code></td><td>Execute INSERT, UPDATE, DELETE</td></tr>
+          <tr><td><code>db.get</code></td><td><code>(sql, params?)</code></td><td><code>object | undefined</code></td><td>Fetch single row</td></tr>
+          <tr><td><code>db.all</code></td><td><code>(sql, params?)</code></td><td><code>object[]</code></td><td>Fetch all matching rows</td></tr>
+          <tr><td><code>db.exec</code></td><td><code>(sql)</code></td><td><code>void</code></td><td>Execute raw SQL (DDL, multi-statement)</td></tr>
+          <tr><td><code>db.raw</code></td><td>&mdash;</td><td><code>Database</code></td><td>Underlying better-sqlite3 instance</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Config</h3>
+      <table>
+        <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>filename</code></td><td><code>./data/stratum.db</code></td><td>Path to the SQLite database file. Directory is created automatically.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── module-api ──── -->
+    <section id="mod-api">
+      <h2>module-api</h2>
+      <p>Express HTTP server with JSON body parsing and CORS. Other modules mount their routes through the <code>api.registerRouter</code> service.</p>
+
+      <h3>Services</h3>
+      <table>
+        <thead><tr><th>Service</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>api.app</code></td><td>Express App</td><td>The raw Express application instance</td></tr>
+          <tr><td><code>api.registerRouter</code></td><td><code>(prefix, router) => void</code></td><td>Mount an Express router at the given URL prefix</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Endpoints</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/health</code></td><td>Health check &mdash; returns <code>{ status: "ok" }</code></td></tr>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/__plugins</code></td><td>Aggregated UI plugin metadata for the frontend</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Config</h3>
+      <table>
+        <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>port</code></td><td><code>3001</code></td><td>HTTP server port</td></tr>
+          <tr><td><code>cors</code></td><td><code>true</code></td><td>Enable CORS middleware</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── module-auth ──── -->
+    <section id="mod-auth">
+      <h2>module-auth</h2>
+      <p>JWT-based authentication with bcrypt password hashing. Creates a <code>users</code> table on init and provides register/login/me endpoints.</p>
+
+      <p><strong>Dependencies:</strong> <code>module-db-sqlite</code>, <code>module-api</code></p>
+
+      <h3>Services</h3>
+      <table>
+        <thead><tr><th>Service</th><th>Signature</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>auth.verifyToken</code></td><td><code>(token) => decoded</code></td><td>Verify JWT, returns <code>{ id, username }</code></td></tr>
+          <tr><td><code>auth.requireAuth</code></td><td><code>(req, res, next)</code></td><td>Express middleware. Extracts Bearer token, verifies it, sets <code>req.user</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Endpoints</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Body</th><th>Response</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><span class="badge badge-post">POST</span></td>
+            <td><code>/api/auth/register</code></td>
+            <td><code>{ username, email, password }</code></td>
+            <td><code>{ user, token }</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-post">POST</span></td>
+            <td><code>/api/auth/login</code></td>
+            <td><code>{ username, password }</code></td>
+            <td><code>{ user, token }</code></td>
+          </tr>
+          <tr>
+            <td><span class="badge badge-get">GET</span></td>
+            <td><code>/api/auth/me</code></td>
+            <td>&mdash;</td>
+            <td><code>{ id, username, email, created_at }</code></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Events</h3>
+      <table>
+        <thead><tr><th>Event</th><th>Payload</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-event">user.created</span></td><td><code>{ id, username, email }</code></td><td>After successful registration</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Config</h3>
+      <table>
+        <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>jwtSecret</code></td><td><code>'change-me'</code></td><td>Secret key for JWT signing</td></tr>
+          <tr><td><code>tokenExpiry</code></td><td><code>'24h'</code></td><td>Token expiration duration</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Database Schema</h3>
+<pre><code>CREATE TABLE users (
+  id            INTEGER PRIMARY KEY AUTOINCREMENT,
+  username      TEXT UNIQUE NOT NULL,
+  email         TEXT UNIQUE NOT NULL,
+  password_hash TEXT NOT NULL,
+  created_at    DATETIME DEFAULT CURRENT_TIMESTAMP
+);</code></pre>
+    </section>
+
+    <hr>
+
+    <!-- ──── module-rbac ──── -->
+    <section id="mod-rbac">
+      <h2>module-rbac</h2>
+      <p>Role-based access control. Creates roles, permissions, and junction tables. Listens to <code>user.created</code> to auto-assign a default role.</p>
+
+      <p><strong>Dependencies:</strong> <code>module-db-sqlite</code>, <code>module-api</code>, <code>module-auth</code></p>
+
+      <h3>Services</h3>
+      <table>
+        <thead><tr><th>Service</th><th>Signature</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>rbac.requireRole</code></td><td><code>(roleName) => middleware</code></td><td>Returns Express middleware that checks if <code>req.user</code> has the specified role</td></tr>
+        </tbody>
+      </table>
+
+      <h4>Usage Example</h4>
+<pre><code>const requireAuth = context.services.get('auth.requireAuth');
+const requireRole = context.services.get('rbac.requireRole');
+
+// Only admins can delete users
+router.delete('/users/:id',
+  requireAuth,
+  requireRole('admin'),
+  deleteHandler
+);</code></pre>
+
+      <h3>Endpoints</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/rbac/roles</code></td><td>List all roles</td></tr>
+          <tr><td><span class="badge badge-post">POST</span></td><td><code>/api/rbac/roles</code></td><td>Create role <code>{ name, description }</code></td></tr>
+          <tr><td><span class="badge badge-post">POST</span></td><td><code>/api/rbac/assign</code></td><td>Assign role <code>{ userId, roleName }</code></td></tr>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/rbac/user/:userId</code></td><td>Get roles for a user</td></tr>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/rbac/roles/:name/permissions</code></td><td>Get permissions for a role</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Config</h3>
+      <table>
+        <thead><tr><th>Option</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>defaultRole</code></td><td><code>'user'</code></td><td>Role auto-assigned to new users via <code>user.created</code> event</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Database Schema</h3>
+<pre><code>CREATE TABLE roles (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT UNIQUE NOT NULL,
+  description TEXT DEFAULT ''
+);
+
+CREATE TABLE permissions (
+  id          INTEGER PRIMARY KEY AUTOINCREMENT,
+  name        TEXT UNIQUE NOT NULL,
+  description TEXT DEFAULT ''
+);
+
+CREATE TABLE role_permissions (
+  role_id       INTEGER NOT NULL REFERENCES roles(id),
+  permission_id INTEGER NOT NULL REFERENCES permissions(id),
+  PRIMARY KEY (role_id, permission_id)
+);
+
+CREATE TABLE user_roles (
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  role_id INTEGER NOT NULL REFERENCES roles(id),
+  PRIMARY KEY (user_id, role_id)
+);</code></pre>
+    </section>
+
+    <hr>
+
+    <!-- ──── module-dashboard ──── -->
+    <section id="mod-dashboard">
+      <h2>module-dashboard</h2>
+      <p>A sample dashboard module that displays basic system statistics.</p>
+
+      <p><strong>Dependencies:</strong> <code>module-api</code>, <code>module-auth</code></p>
+
+      <h3>Endpoints</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Response</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/dashboard/stats</code></td><td><code>{ users, roles, uptime }</code></td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── module-firebase ──── -->
+    <section id="mod-firebase">
+      <h2>module-firebase</h2>
+      <p>Full Firebase suite &mdash; Firestore, Authentication, and Cloud Storage. Uses the Firebase Admin SDK.</p>
+
+      <p><strong>Dependencies:</strong> <code>module-api</code></p>
+
+      <div class="callout">
+        <strong>Coexistence</strong>
+        This module is designed to coexist with <code>module-db-sqlite</code> and <code>module-auth</code>. When both are enabled, Firebase services live under <code>firebase.*</code> namespaces. When the original modules are disabled, Firebase automatically fills the standard <code>db</code> and <code>auth.*</code> service slots.
+      </div>
+
+      <h3>Services (Always Registered)</h3>
+      <table>
+        <thead><tr><th>Service</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>firebase.admin</code></td><td>App</td><td>Firebase Admin app instance</td></tr>
+          <tr><td><code>firebase.firestore</code></td><td>Firestore</td><td>Firestore database instance for direct access</td></tr>
+          <tr><td><code>firebase.auth</code></td><td>Auth</td><td>Firebase Admin Auth for user management</td></tr>
+          <tr><td><code>firebase.storage</code></td><td>object</td><td>Cloud Storage service (only if <code>storageBucket</code> configured)</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Fallback Services (Conditional)</h3>
+      <p>These are registered <strong>only when</strong> the original module is not loaded:</p>
+      <table>
+        <thead><tr><th>Service</th><th>Condition</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>db</code></td><td><code>module-db-sqlite</code> disabled</td><td>Firestore adapter with SQL-compatible <code>run/get/all/exec</code> interface</td></tr>
+          <tr><td><code>auth.verifyToken</code></td><td><code>module-auth</code> disabled</td><td>Firebase ID token verification</td></tr>
+          <tr><td><code>auth.requireAuth</code></td><td><code>module-auth</code> disabled</td><td>Express middleware using Firebase Auth</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Endpoints</h3>
+      <table>
+        <thead><tr><th>Method</th><th>Path</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/firebase/health</code></td><td>Firebase connectivity check</td></tr>
+          <tr><td><span class="badge badge-get">GET</span></td><td><code>/api/firebase/files?prefix=</code></td><td>List files in Cloud Storage</td></tr>
+          <tr><td><span class="badge badge-delete">DELETE</span></td><td><code>/api/firebase/files/:path</code></td><td>Delete a file from Cloud Storage</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Storage Service API</h3>
+<pre><code>const storage = context.services.get('firebase.storage');
+
+// Upload a file
+await storage.upload('uploads/photo.jpg', buffer, { contentType: 'image/jpeg' });
+
+// Get download URL
+const url = await storage.getDownloadURL('uploads/photo.jpg');
+
+// List files
+const files = await storage.list('uploads/');
+
+// Delete
+await storage.delete('uploads/photo.jpg');</code></pre>
+
+      <h3>Config</h3>
+      <table>
+        <thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>credential</code></td><td>string | object</td><td>Path to service account JSON file, or inline credential object</td></tr>
+          <tr><td><code>databaseURL</code></td><td>string</td><td>Firebase Realtime Database URL</td></tr>
+          <tr><td><code>storageBucket</code></td><td>string</td><td>Cloud Storage bucket name (enables storage service)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── ui-shell ──── -->
+    <section id="mod-ui-shell">
+      <h2>ui-shell</h2>
+      <p>React + Vite frontend application with dynamic plugin discovery. Not a traditional module &mdash; it&rsquo;s the frontend counterpart to the Kernel.</p>
+
+      <h3>How It Works</h3>
+      <ol style="margin: 12px 0 20px 24px; line-height: 2;">
+        <li>On boot, fetches <code>GET /api/__plugins</code> to discover all module UI metadata</li>
+        <li>Aggregates routes and nav items into <code>PluginContext</code></li>
+        <li><code>AppRouter</code> dynamically generates React Router routes from plugin metadata</li>
+        <li>Components are lazy-loaded from the <code>components.js</code> registry</li>
+        <li><code>MainLayout</code> renders sidebar nav from plugin nav items</li>
+      </ol>
+
+      <h3>Key Files</h3>
+      <table>
+        <thead><tr><th>File</th><th>Purpose</th></tr></thead>
+        <tbody>
+          <tr><td><code>src/PluginContext.jsx</code></td><td>Fetches plugin metadata, provides routes/nav via React context</td></tr>
+          <tr><td><code>src/AuthContext.jsx</code></td><td>Auth state, token storage, <code>authFetch</code> helper</td></tr>
+          <tr><td><code>src/AppRouter.jsx</code></td><td>Dynamic route generation with protected/public route separation</td></tr>
+          <tr><td><code>src/components.js</code></td><td>Maps component names from plugin metadata to lazy-loaded React components</td></tr>
+          <tr><td><code>src/layouts/MainLayout.jsx</code></td><td>App shell with sidebar, header, and content area</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Scripts</h3>
+      <table>
+        <thead><tr><th>Command</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>npm run dev:ui</code></td><td>Start Vite dev server on port 3000 (proxied to backend)</td></tr>
+          <tr><td><code>npm run build --workspace=@stratum/ui-shell</code></td><td>Production build</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <hr>
+
+    <!-- ──── CREATING A MODULE ──── -->
+    <section id="creating-module">
+      <h2>Creating a Module</h2>
+      <p>Step-by-step guide to creating a new Stratum module.</p>
+
+      <h3>Step 1: Create the Package</h3>
+<pre><code>mkdir packages/module-my-feature</code></pre>
+
+      <div class="code-title">packages/module-my-feature/package.json</div>
+<pre><code>{
+  "name": "@stratum/module-my-feature",
+  "version": "1.0.0",
+  "description": "My custom feature module",
+  "main": "index.js",
+  "dependencies": {}
+}</code></pre>
+
+      <h3>Step 2: Implement the Module</h3>
+      <div class="code-title">packages/module-my-feature/index.js</div>
+<pre><code>module.exports = {
+  name: 'module-my-feature',
+  version: '1.0.0',
+  dependencies: ['module-api', 'module-auth'],
+
+  ui: {
+    routes: [{ path: '/my-feature', component: 'MyFeaturePage' }],
+    nav: [{ label: 'My Feature', path: '/my-feature', icon: 'Star' }],
+  },
+
+  async register(context) {
+    // Expose services for other modules
+    context.services.register('my-feature.doSomething', (input) =&gt; {
+      return `Processed: ${input}`;
+    });
+    context.logger.info('Registered');
+  },
+
+  async init(context) {
+    // Set up database tables
+    const db = context.services.get('db');
+    db.exec(`
+      CREATE TABLE IF NOT EXISTS my_items (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    context.logger.info('Tables ready');
+  },
+
+  async start(context) {
+    const { Router } = require('express');
+    const router = Router();
+    const registerRouter = context.services.get('api.registerRouter');
+    const requireAuth = context.services.get('auth.requireAuth');
+    const db = context.services.get('db');
+
+    router.get('/', requireAuth, (req, res) =&gt; {
+      const items = db.all('SELECT * FROM my_items');
+      res.json(items);
+    });
+
+    router.post('/', requireAuth, (req, res) =&gt; {
+      const { name } = req.body;
+      const result = db.run(
+        'INSERT INTO my_items (name) VALUES (?)', [name]
+      );
+      res.status(201).json({ id: Number(result.lastInsertRowid), name });
+    });
+
+    registerRouter('/api/my-feature', router);
+  },
+
+  async stop() {},
+  async destroy() {},
+};</code></pre>
+
+      <h3>Step 3: Add to Config</h3>
+      <div class="code-title">stratum.config.js</div>
+<pre><code>'@stratum/module-my-feature': {
+  enabled: true,
+  options: {
+    // your module-specific options here
+  },
+},</code></pre>
+
+      <h3>Step 4: Install &amp; Run</h3>
+<pre><code>npm install
+node index.js</code></pre>
+
+      <p>The Kernel will automatically discover, sort, and boot your module.</p>
+    </section>
+
+    <hr>
+
+    <!-- ──── FRONTEND PLUGINS ──── -->
+    <section id="frontend-plugins">
+      <h2>Frontend Plugins</h2>
+      <p>Modules can contribute UI elements to the React frontend by exporting a <code>ui</code> property.</p>
+
+      <h3>UI Metadata Format</h3>
+<pre><code>ui: {
+  routes: [
+    { path: '/my-page', component: 'MyPage' },
+    { path: '/login', component: 'LoginPage', public: true },
+  ],
+  nav: [
+    { label: 'My Page', path: '/my-page', icon: 'Star' },
+  ],
+}</code></pre>
+
+      <table>
+        <thead><tr><th>Field</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>routes[].path</code></td><td>URL path for the route</td></tr>
+          <tr><td><code>routes[].component</code></td><td>Component name (must match a key in <code>components.js</code>)</td></tr>
+          <tr><td><code>routes[].public</code></td><td>If <code>true</code>, the route is accessible without authentication</td></tr>
+          <tr><td><code>nav[].label</code></td><td>Display text in the sidebar</td></tr>
+          <tr><td><code>nav[].path</code></td><td>Navigation target</td></tr>
+          <tr><td><code>nav[].icon</code></td><td>Icon name from <a href="https://lucide.dev/icons">lucide-react</a></td></tr>
+        </tbody>
+      </table>
+
+      <h3>Registering the Component</h3>
+      <p>Add your page component to the component registry:</p>
+      <div class="code-title">packages/ui-shell/src/components.js</div>
+<pre><code>import { lazy } from 'react';
+
+const components = {
+  LoginPage: lazy(() =&gt; import('./pages/LoginPage')),
+  DashboardPage: lazy(() =&gt; import('./pages/DashboardPage')),
+  RolesPage: lazy(() =&gt; import('./pages/RolesPage')),
+  MyPage: lazy(() =&gt; import('./pages/MyPage')),  // &lt;-- add this
+};
+
+export default components;</code></pre>
+
+      <h3>Creating the Page Component</h3>
+      <div class="code-title">packages/ui-shell/src/pages/MyPage.jsx</div>
+<pre><code>import { useState, useEffect } from 'react';
+import { useAuth } from '../AuthContext';
+
+export default function MyPage() {
+  const { authFetch } = useAuth();
+  const [items, setItems] = useState([]);
+
+  useEffect(() =&gt; {
+    authFetch('/api/my-feature')
+      .then(res =&gt; res.json())
+      .then(setItems);
+  }, [authFetch]);
+
+  return (
+    &lt;div className="page"&gt;
+      &lt;h2&gt;My Feature&lt;/h2&gt;
+      {items.map(item =&gt; (
+        &lt;p key={item.id}&gt;{item.name}&lt;/p&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+      <h3>How Discovery Works</h3>
+      <div class="diagram">
+Backend                                     Frontend
+
+ Module A  ─┐                              PluginContext
+ Module B  ─┤── ui metadata ──▶ GET /api/__plugins ──▶ routes[]
+ Module C  ─┘                                          nav[]
+                                                        │
+                                              ┌─────────┴─────────┐
+                                              ▼                   ▼
+                                         AppRouter          MainLayout
+                                      (dynamic routes)    (sidebar nav)
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ──── FIREBASE MODES ──── -->
+    <section id="firebase-modes">
+      <h2>Firebase Modes</h2>
+      <p>The Firebase module supports two operational modes depending on which other modules are enabled.</p>
+
+      <h3>Mode 1: Coexistence</h3>
+      <p>Both SQLite and Firebase are enabled. Firebase services are available under the <code>firebase.*</code> namespace. The <code>db</code> service still points to SQLite.</p>
+
+      <div class="code-title">stratum.config.js</div>
+<pre><code>'@stratum/module-db-sqlite': { enabled: true },
+'@stratum/module-auth':      { enabled: true },
+'@stratum/module-firebase':  { enabled: true, options: { ... } },</code></pre>
+
+      <table>
+        <thead><tr><th>Service</th><th>Provider</th></tr></thead>
+        <tbody>
+          <tr><td><code>db</code></td><td>module-db-sqlite (SQLite)</td></tr>
+          <tr><td><code>auth.requireAuth</code></td><td>module-auth (JWT)</td></tr>
+          <tr><td><code>firebase.firestore</code></td><td>module-firebase</td></tr>
+          <tr><td><code>firebase.auth</code></td><td>module-firebase</td></tr>
+          <tr><td><code>firebase.storage</code></td><td>module-firebase</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Mode 2: Firebase-Only</h3>
+      <p>Disable SQLite and JWT auth. Firebase fills the standard service slots so downstream modules (RBAC, dashboard) work unchanged.</p>
+
+      <div class="code-title">stratum.config.js</div>
+<pre><code>'@stratum/module-db-sqlite': { enabled: false },
+'@stratum/module-auth':      { enabled: false },
+'@stratum/module-firebase':  { enabled: true, options: { ... } },</code></pre>
+
+      <table>
+        <thead><tr><th>Service</th><th>Provider</th></tr></thead>
+        <tbody>
+          <tr><td><code>db</code></td><td>module-firebase (Firestore adapter)</td></tr>
+          <tr><td><code>auth.requireAuth</code></td><td>module-firebase (Firebase Auth)</td></tr>
+          <tr><td><code>firebase.firestore</code></td><td>module-firebase</td></tr>
+          <tr><td><code>firebase.auth</code></td><td>module-firebase</td></tr>
+          <tr><td><code>firebase.storage</code></td><td>module-firebase</td></tr>
+        </tbody>
+      </table>
+
+      <div class="callout">
+        <strong>Dependency note</strong>
+        When using Firebase-only mode, you must update <code>module-rbac</code> and <code>module-auth</code> dependencies accordingly, or use the Firebase module as a drop-in by ensuring the dependency chain resolves. The Firebase module only declares <code>module-api</code> as a dependency.
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ──── API REFERENCE ──── -->
+    <section id="api-reference">
+      <h2>API Reference</h2>
+
+      <h3>ServiceRegistry</h3>
+<pre><code>// Register a named service (throws if name already taken)
+context.services.register(name: string, implementation: any): void
+
+// Retrieve a service (throws if not found)
+context.services.get(name: string): any
+
+// Check if a service exists
+context.services.has(name: string): boolean
+
+// Get all services as a plain object
+context.services.getAll(): Record&lt;string, any&gt;</code></pre>
+
+      <h3>EventBus</h3>
+<pre><code>// Subscribe to an event. Returns an unsubscribe function.
+context.events.on(event: string, handler: Function): Function
+
+// Unsubscribe a specific handler
+context.events.off(event: string, handler: Function): void
+
+// Emit an event. Handlers run sequentially and are awaited.
+context.events.emit(event: string, data: any): Promise&lt;void&gt;
+
+// Remove all listeners (used internally during shutdown)
+context.events.removeAll(): void</code></pre>
+
+      <h3>Logger</h3>
+<pre><code>// All methods prefix output with [module-name]
+context.logger.info(...args)   // console.log
+context.logger.warn(...args)   // console.warn
+context.logger.error(...args)  // console.error
+context.logger.debug(...args)  // console.debug</code></pre>
+
+      <h3>ConfigManager (Internal)</h3>
+<pre><code>// Check if a module is enabled
+configManager.isEnabled(moduleName: string): boolean
+
+// Get module options
+configManager.getModuleConfig(moduleName: string): object
+
+// Get all enabled module names
+configManager.getEnabledModules(): string[]</code></pre>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // Highlight active sidebar link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('.sidebar a');
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(link => {
+          link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -80% 0px' });
+
+  sections.forEach(section => observer.observe(section));
+</script>
+</body>
+</html>

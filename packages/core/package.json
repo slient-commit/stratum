@@ -1,0 +1,6 @@
+{
+  "name": "@stratum/core",
+  "version": "1.0.0",
+  "description": "Stratum core — module loader, lifecycle, event bus, service registry",
+  "main": "index.js"
+}

@@ -1,0 +1,9 @@
+{
+  "name": "@stratum/module-firebase",
+  "version": "1.0.0",
+  "description": "Full Firebase suite module for Stratum — Firestore, Auth, Cloud Storage",
+  "main": "index.js",
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}

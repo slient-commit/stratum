@@ -1,0 +1,9 @@
+{
+  "name": "@stratum/module-db-sqlite",
+  "version": "1.0.0",
+  "description": "SQLite database adapter module for Stratum",
+  "main": "index.js",
+  "dependencies": {
+    "better-sqlite3": "^11.0.0"
+  }
+}

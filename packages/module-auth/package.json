@@ -1,0 +1,10 @@
+{
+  "name": "@stratum/module-auth",
+  "version": "1.0.0",
+  "description": "JWT authentication module for Stratum",
+  "main": "index.js",
+  "dependencies": {
+    "jsonwebtoken": "^9.0.0",
+    "bcryptjs": "^2.4.3"
+  }
+}

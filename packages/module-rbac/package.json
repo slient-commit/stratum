@@ -1,0 +1,6 @@
+{
+  "name": "@stratum/module-rbac",
+  "version": "1.0.0",
+  "description": "Role-based access control module for Stratum",
+  "main": "index.js"
+}

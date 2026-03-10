@@ -1,0 +1,6 @@
+{
+  "name": "@stratum/module-dashboard",
+  "version": "1.0.0",
+  "description": "Sample dashboard module for Stratum",
+  "main": "index.js"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "stratum",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A modular core framework for building domain-specific applications",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "start": "node index.js",
+    "dev:ui": "npm run dev --workspace=@stratum/ui-shell"
+  }
+}

@@ -1,0 +1,63 @@
+Stratum Community License v1.0
+
+Copyright (c) 2026 Stratum Contributors. All rights reserved.
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to use
+the Software subject to the following conditions:
+
+1. PERMITTED USES
+
+   a. You may use the Software to build applications for personal, internal,
+      educational, or commercial purposes.
+
+   b. You may create, modify, distribute, and sell your own modules (plugins)
+      that extend the Software. Modules are defined as any code residing in
+      the "packages/module-*" directories or in external packages that
+      implement the Stratum module contract.
+
+   c. You may create and distribute derivative applications built on top of
+      the Software, provided the core remains unmodified.
+
+2. RESTRICTIONS
+
+   a. NO MODIFICATION OF THE CORE. You may not modify, alter, or create
+      derivative works of the core framework. The core is defined as any
+      code residing in the "packages/core" directory and the root-level
+      boot files ("index.js", "stratum.config.js" structure, and
+      "packages/ui-shell").
+
+   b. NO RESALE. You may not sell, sublicense, lease, or otherwise
+      commercially distribute the Software itself, whether in original or
+      modified form. This includes bundling the Software as a product,
+      offering it as a paid download, or reselling it as a framework or
+      platform.
+
+   c. NO MISREPRESENTATION. You may not claim authorship of the core
+      framework or remove this license and copyright notice from any copy
+      of the Software.
+
+3. MODULES AND PLUGINS
+
+   Modules you create are your own intellectual property. This license
+   places no restrictions on the licensing, distribution, or sale of
+   modules you develop. You are free to license your modules under any
+   terms you choose, including proprietary and commercial licenses.
+
+4. ATTRIBUTION
+
+   Any distribution of the Software or applications built with it must
+   include this license file and the following notice in a reasonable
+   location (e.g., README, about page, or documentation):
+
+      "Built with Stratum — https://github.com/<your-org>/stratum"
+
+5. DISCLAIMER
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+   MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, AND NONINFRINGEMENT.
+   IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+   CLAIM, DAMAGES, OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+   TORT, OR OTHERWISE, ARISING FROM, OUT OF, OR IN CONNECTION WITH THE
+   SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
