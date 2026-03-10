@@ -1,5 +1,7 @@
-const path = require('path');
-const admin = require('firebase-admin');
+const { initializeApp, deleteApp } = require('firebase/app');
+const { getFirestore } = require('firebase/firestore');
+const { getAuth } = require('firebase/auth');
+const { getStorage } = require('firebase/storage');
 const FirestoreDB = require('./lib/firestore-db');
 const createAuthServices = require('./lib/firebase-auth');
 const createStorageService = require('./lib/firebase-storage');
@@ -10,55 +12,42 @@ module.exports = {
   dependencies: ['module-api'],
 
   async register(context) {
-    // Initialize Firebase Admin SDK
-    const credentialPath = context.config.credential;
-    const initOptions = {};
+    // Initialize Firebase with the web app config
+    // Config comes directly from Firebase Console → Project Settings → Your apps
+    const firebaseConfig = { ...context.config };
+    delete firebaseConfig.enabled;
 
-    if (typeof credentialPath === 'string') {
-      const serviceAccount = require(path.resolve(credentialPath));
-      initOptions.credential = admin.credential.cert(serviceAccount);
-    } else if (typeof credentialPath === 'object') {
-      initOptions.credential = admin.credential.cert(credentialPath);
-    }
-    // If no credential, uses GOOGLE_APPLICATION_CREDENTIALS env var or default credentials
+    this._app = initializeApp(firebaseConfig, 'stratum-firebase');
 
-    if (context.config.databaseURL) {
-      initOptions.databaseURL = context.config.databaseURL;
-    }
-    if (context.config.storageBucket) {
-      initOptions.storageBucket = context.config.storageBucket;
-    }
-
-    this._app = admin.initializeApp(initOptions, 'stratum-firebase');
+    const firestore = getFirestore(this._app);
+    const firebaseAuth = getAuth(this._app);
 
     // --- Always register namespaced Firebase services ---
 
-    const firestore = this._app.firestore();
-    const adminAuth = this._app.auth();
-
-    context.services.register('firebase.admin', this._app);
+    context.services.register('firebase.app', this._app);
     context.services.register('firebase.firestore', firestore);
-    context.services.register('firebase.auth', adminAuth);
+    context.services.register('firebase.auth', firebaseAuth);
 
-    // Storage (only if bucket configured)
-    if (context.config.storageBucket) {
-      const bucket = this._app.storage().bucket();
-      const storageService = createStorageService(bucket);
+    // Storage (only if storageBucket is configured)
+    if (firebaseConfig.storageBucket) {
+      const storage = getStorage(this._app);
+      const storageService = createStorageService(storage);
       context.services.register('firebase.storage', storageService);
     }
 
     // --- Coexistence: fill standard service slots if original modules are disabled ---
 
-    // If module-db-sqlite is not loaded, register Firestore as the 'db' service
     if (!context.services.has('db')) {
       const firestoreDB = new FirestoreDB(firestore);
       context.services.register('db', firestoreDB);
       context.logger.info('Registered Firestore as "db" service (module-db-sqlite not loaded)');
     }
 
-    // If module-auth is not loaded, register Firebase Auth as auth.* services
     if (!context.services.has('auth.requireAuth')) {
-      const { verifyToken, requireAuth } = createAuthServices(adminAuth);
+      const { verifyToken, requireAuth } = createAuthServices(
+        firebaseAuth,
+        firebaseConfig.projectId
+      );
       context.services.register('auth.verifyToken', verifyToken);
       context.services.register('auth.requireAuth', requireAuth);
       context.logger.info(
@@ -70,7 +59,6 @@ module.exports = {
   },
 
   async init(context) {
-    // Firestore is schemaless — no migrations needed
     context.logger.info('Firebase initialized');
   },
 
@@ -104,11 +92,12 @@ module.exports = {
       });
     }
 
-    // Health check for Firebase connection
+    // Health check
     router.get('/health', async (req, res) => {
       try {
-        // Quick Firestore connectivity test
-        await context.services.get('firebase.firestore').listCollections();
+        const { getDocs, collection, limit, query } = require('firebase/firestore');
+        const firestore = context.services.get('firebase.firestore');
+        await getDocs(query(collection(firestore, '_health'), limit(1)));
         res.json({ status: 'ok', service: 'firebase' });
       } catch (err) {
         res.status(503).json({ status: 'error', error: err.message });
@@ -122,7 +111,7 @@ module.exports = {
 
   async destroy(context) {
     if (this._app) {
-      await this._app.delete();
+      await deleteApp(this._app);
       context.logger.info('Firebase app deleted');
     }
   },

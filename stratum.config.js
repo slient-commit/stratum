@@ -32,9 +32,15 @@ module.exports = {
     '@stratum/module-firebase': {
       enabled: false,
       options: {
-        credential: './service-account.json',
-        // databaseURL: 'https://<project>.firebaseio.com',
-        // storageBucket: '<project>.appspot.com',
+        // Your web app's Firebase configuration
+        // From Firebase Console → Project Settings → Your apps
+        apiKey: 'your-api-key',
+        authDomain: 'your-project.firebaseapp.com',
+        projectId: 'your-project-id',
+        storageBucket: 'your-project.firebasestorage.app',
+        messagingSenderId: '123456789',
+        appId: '1:123456789:web:abcdef',
+        // measurementId: 'G-XXXXXXXXXX',
       },
     },
   },

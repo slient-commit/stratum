@@ -1,67 +1,80 @@
 /**
- * Cloud Storage wrapper that provides upload, download URL, and delete operations.
+ * Cloud Storage wrapper using the Firebase JS SDK (modular v9+).
  * Registered as the firebase.storage service.
  */
 
-function createStorageService(bucket) {
+const {
+  ref,
+  uploadBytes,
+  getDownloadURL,
+  deleteObject,
+  list,
+  getMetadata,
+} = require('firebase/storage');
+
+function createStorageService(storage) {
   return {
     /**
-     * Upload a buffer or stream to Cloud Storage.
-     * @param {string} filePath — destination path in the bucket
-     * @param {Buffer|Stream} data — file contents
+     * Upload a buffer to Cloud Storage.
+     * @param {string} filePath — destination path
+     * @param {Buffer|Uint8Array} data — file contents
      * @param {object} [metadata] — optional metadata (contentType, etc.)
-     * @returns {{ name, bucket, fullPath }}
+     * @returns {{ name, fullPath, downloadURL }}
      */
     async upload(filePath, data, metadata = {}) {
-      const file = bucket.file(filePath);
-      await file.save(data, {
-        metadata: {
-          contentType: metadata.contentType || 'application/octet-stream',
-          ...metadata,
-        },
+      const fileRef = ref(storage, filePath);
+      await uploadBytes(fileRef, data, {
+        contentType: metadata.contentType || 'application/octet-stream',
+        ...metadata,
       });
+      const url = await getDownloadURL(fileRef);
       return {
-        name: file.name,
-        bucket: bucket.name,
-        fullPath: `gs://${bucket.name}/${file.name}`,
+        name: fileRef.name,
+        fullPath: fileRef.fullPath,
+        downloadURL: url,
       };
     },
 
     /**
-     * Get a signed download URL for a file.
-     * @param {string} filePath — path in the bucket
-     * @param {number} [expiresInMs] — expiry in ms from now (default 1 hour)
-     * @returns {string} — signed URL
+     * Get a download URL for a file.
+     * @param {string} filePath — path in storage
+     * @returns {string} — download URL
      */
-    async getDownloadURL(filePath, expiresInMs = 3600000) {
-      const file = bucket.file(filePath);
-      const [url] = await file.getSignedUrl({
-        action: 'read',
-        expires: Date.now() + expiresInMs,
-      });
-      return url;
+    async getDownloadURL(filePath) {
+      return getDownloadURL(ref(storage, filePath));
     },
 
     /**
      * Delete a file from Cloud Storage.
-     * @param {string} filePath — path in the bucket
+     * @param {string} filePath — path in storage
      */
     async delete(filePath) {
-      await bucket.file(filePath).delete();
+      await deleteObject(ref(storage, filePath));
     },
 
     /**
      * List files in a directory.
      * @param {string} [prefix] — directory prefix (e.g. 'uploads/')
-     * @returns {Array<{ name, size, updated }>}
+     * @returns {Array<{ name, fullPath }>}
      */
     async list(prefix = '') {
-      const [files] = await bucket.getFiles({ prefix });
-      return files.map((f) => ({
-        name: f.name,
-        size: f.metadata.size,
-        updated: f.metadata.updated,
-      }));
+      const folderRef = ref(storage, prefix);
+      const result = await list(folderRef);
+      const files = [];
+      for (const itemRef of result.items) {
+        try {
+          const meta = await getMetadata(itemRef);
+          files.push({
+            name: itemRef.name,
+            fullPath: itemRef.fullPath,
+            size: meta.size,
+            updated: meta.updated,
+          });
+        } catch {
+          files.push({ name: itemRef.name, fullPath: itemRef.fullPath });
+        }
+      }
+      return files;
     },
   };
 }

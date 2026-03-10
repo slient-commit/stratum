@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react';
+import { createContext, useContext, useState, useCallback, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
@@ -22,6 +22,17 @@ export function AuthProvider({ children }) {
     setToken(null);
     setUser(null);
   }, []);
+
+  // Validate stored token on startup
+  useEffect(() => {
+    if (!token) return;
+    fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${token}` },
+    }).then((res) => {
+      if (!res.ok) return logout();
+      return res.json().then(setUser);
+    }).catch(() => logout());
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const authFetch = useCallback(
     async (url, options = {}) => {
