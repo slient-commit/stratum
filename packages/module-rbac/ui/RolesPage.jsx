@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '@stratum/ui-shell/src/AuthContext';
 
 export default function RolesPage() {
   const { authFetch } = useAuth();
