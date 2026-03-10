@@ -37,9 +37,11 @@ Stratum/
     ├── module-api/          # Express REST API server
     ├── module-auth/         # JWT authentication (register, login, sessions)
     ├── module-rbac/         # Role-based access control
+    │   └── ui/              #   └── RolesPage.jsx
     ├── module-dashboard/    # Sample dashboard with stats
+    │   └── ui/              #   └── DashboardPage.jsx
     ├── module-firebase/     # Full Firebase suite (Firestore, Auth, Storage)
-    └── ui-shell/            # React + Vite frontend shell
+    └── ui-shell/            # React + Vite frontend shell (auto-discovers module UIs)
 ```
 
 ---
@@ -137,7 +139,14 @@ module.exports = {
     },
     '@stratum/module-firebase': {
       enabled: false,
-      options: { credential: './service-account.json' },
+      options: {
+        apiKey: 'your-api-key',
+        authDomain: 'your-project.firebaseapp.com',
+        projectId: 'your-project-id',
+        storageBucket: 'your-project.firebasestorage.app',
+        messagingSenderId: '123456789',
+        appId: '1:123456789:web:abcdef',
+      },
     },
   },
 };
@@ -267,16 +276,16 @@ Sample dashboard page with system stats.
 
 ### module-firebase
 
-Full Firebase suite — Firestore, Authentication, and Cloud Storage. Designed to **coexist** with SQLite/JWT modules or **replace** them.
+Full Firebase suite using the official Firebase JS SDK — Firestore, Authentication, and Cloud Storage. Designed to **coexist** with SQLite/JWT modules or **replace** them.
 
 **Services always registered:**
 
 | Service | Description |
 |---------|-------------|
-| `firebase.admin` | Firebase Admin app instance |
+| `firebase.app` | Firebase app instance |
 | `firebase.firestore` | Firestore database instance |
-| `firebase.auth` | Firebase Admin Auth instance |
-| `firebase.storage` | Cloud Storage service (if bucket configured) |
+| `firebase.auth` | Firebase Auth instance |
+| `firebase.storage` | Cloud Storage service |
 
 **Automatic fallback services** (registered only when original modules are disabled):
 
@@ -294,25 +303,34 @@ Full Firebase suite — Firestore, Authentication, and Cloud Storage. Designed t
 | `GET /api/firebase/files?prefix=` | List files in Cloud Storage |
 | `DELETE /api/firebase/files/:path` | Delete a file |
 
-**Config options:**
+**Config options** (standard Firebase web config):
 
 | Option | Description |
 |--------|-------------|
-| `credential` | Path to service account JSON or inline credentials object |
-| `databaseURL` | Firebase Realtime Database URL |
-| `storageBucket` | Cloud Storage bucket name |
+| `apiKey` | Firebase API key |
+| `authDomain` | Firebase Auth domain |
+| `projectId` | Firebase project ID |
+| `storageBucket` | Cloud Storage bucket |
+| `messagingSenderId` | Messaging sender ID |
+| `appId` | Firebase app ID |
 
 ---
 
 ### ui-shell
 
-React + Vite frontend with dynamic plugin discovery.
+React + Vite frontend with **fully modular UI**. No manual registration needed.
 
 - Fetches `/api/__plugins` on boot to discover module routes and nav items
+- **Auto-discovers** page components from each module's `ui/` folder via Vite's `import.meta.glob`
+- **Auto-imports** module CSS from each module's `ui/` folder (`.css` files)
 - Dynamic routing — modules declare routes and the shell renders them
 - Dark theme with sidebar navigation
 - Auth flow with protected routes
-- Lazy-loaded page components
+- Lazy-loaded page components with automatic code-splitting
+
+Each module ships its own UI components. The filename becomes the component name (e.g., `DashboardPage.jsx` → `DashboardPage`).
+
+**Hybrid CSS:** The shell provides a design system with CSS variables and common component styles (`.page`, `.data-table`, `.stat-card`, `.inline-form`, etc.). Modules can add their own CSS files in `ui/` for module-specific styles — they are auto-imported at build time.
 
 ---
 
@@ -323,7 +341,10 @@ React + Vite frontend with dynamic plugin discovery.
 ```
 packages/module-my-feature/
 ├── package.json
-└── index.js
+├── index.js
+└── ui/                      # Optional: React pages + CSS (auto-discovered)
+    ├── MyFeaturePage.jsx
+    └── styles.css           # Optional: module-specific styles
 ```
 
 2. Define the module contract in `index.js`:
@@ -380,7 +401,54 @@ module.exports = {
 }
 ```
 
-4. Add to `stratum.config.js`:
+4. If the module has UI, create page components in `ui/`:
+
+```jsx
+// packages/module-my-feature/ui/MyFeaturePage.jsx
+import { useState, useEffect } from 'react';
+import { useAuth } from '@stratum/ui-shell/src/AuthContext';
+
+export default function MyFeaturePage() {
+  const { authFetch } = useAuth();
+  const [items, setItems] = useState([]);
+
+  useEffect(() => {
+    authFetch('/api/my-feature').then(r => r.json()).then(setItems);
+  }, [authFetch]);
+
+  return (
+    <div className="page">
+      <h2>My Feature</h2>
+      {items.map(item => <p key={item.id}>{item.name}</p>)}
+    </div>
+  );
+}
+```
+
+The filename must match the `component` name in `ui.routes` (e.g., `MyFeaturePage.jsx` → `'MyFeaturePage'`). No manual registration needed — the shell auto-discovers it.
+
+5. Optionally, add module-specific CSS in `ui/`:
+
+```css
+/* packages/module-my-feature/ui/styles.css */
+
+/* Use the shell's CSS variables for consistency */
+.my-feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.my-feature-highlight {
+  color: var(--primary);
+  font-weight: 600;
+}
+```
+
+Any `.css` files in `ui/` are auto-imported — no manual imports needed. Use the shell's CSS variables (`--bg`, `--surface`, `--border`, `--text`, `--primary`, `--radius`, etc.) to stay consistent with the design system.
+
+6. Add to `stratum.config.js`:
 
 ```js
 '@stratum/module-my-feature': {
@@ -389,13 +457,39 @@ module.exports = {
 },
 ```
 
-5. If the module has UI, add the component to `packages/ui-shell/src/components.js`:
+7. Run `npm install` and restart.
 
-```js
-MyFeaturePage: lazy(() => import('./pages/MyFeaturePage')),
-```
+---
 
-6. Run `npm install` and restart.
+## CSS Design System
+
+The `ui-shell` provides a design system that all modules should use for visual consistency. Modules **can** add their own CSS for custom components — just drop `.css` files in the module's `ui/` folder.
+
+### Available CSS Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `--bg` | `#0f1117` | Page background |
+| `--surface` | `#1a1d27` | Card/panel background |
+| `--border` | `#2a2d3a` | Border color |
+| `--text` | `#e1e4ed` | Primary text |
+| `--text-muted` | `#8b8fa3` | Secondary text |
+| `--primary` | `#6366f1` | Accent color (indigo) |
+| `--primary-hover` | `#5558e6` | Accent hover |
+| `--danger` | `#ef4444` | Error/destructive |
+| `--success` | `#22c55e` | Success/positive |
+| `--radius` | `8px` | Border radius |
+
+### Reusable CSS Classes
+
+| Class | Description |
+|-------|-------------|
+| `.page` | Page container with heading spacing |
+| `.stats-grid` | Responsive grid for stat cards |
+| `.stat-card` | Individual stat display |
+| `.data-table` | Styled table with hover rows |
+| `.inline-form` | Horizontal form layout |
+| `.error-msg` | Error message banner |
 
 ---
 

@@ -17,4 +17,8 @@ for (const [path, loader] of Object.entries(modulePages)) {
   components[name] = lazy(loader);
 }
 
+// Auto-import module CSS: packages/*/ui/*.css
+// Modules can ship their own styles alongside their pages
+import.meta.glob('../../*/ui/*.css', { eager: true });
+
 export default components;

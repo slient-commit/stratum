@@ -411,6 +411,7 @@
       <div class="section-title">Guides</div>
       <a href="#creating-module">Creating a Module</a>
       <a href="#frontend-plugins">Frontend Plugins</a>
+      <a href="#css-design-system">CSS Design System</a>
       <a href="#firebase-modes">Firebase Modes</a>
       <a href="#api-reference">API Reference</a>
     </nav>
@@ -505,9 +506,18 @@ curl http://localhost:3001/api/auth/me \
     ├── <span class="dir">module-db-sqlite/</span>        <span class="comment"># SQLite adapter</span>
     ├── <span class="dir">module-api/</span>              <span class="comment"># Express HTTP server</span>
     ├── <span class="dir">module-auth/</span>             <span class="comment"># JWT authentication</span>
+    │
     ├── <span class="dir">module-rbac/</span>             <span class="comment"># Role-based access control</span>
+    │   ├── <span class="file">index.js</span>
+    │   └── <span class="dir">ui/</span>
+    │       └── <span class="file">RolesPage.jsx</span>    <span class="comment"># Self-contained UI page</span>
+    │
     ├── <span class="dir">module-dashboard/</span>        <span class="comment"># Sample dashboard</span>
-    ├── <span class="dir">module-firebase/</span>         <span class="comment"># Firebase suite</span>
+    │   ├── <span class="file">index.js</span>
+    │   └── <span class="dir">ui/</span>
+    │       └── <span class="file">DashboardPage.jsx</span> <span class="comment"># Self-contained UI page</span>
+    │
+    ├── <span class="dir">module-firebase/</span>         <span class="comment"># Firebase suite (JS SDK)</span>
     │   └── <span class="dir">lib/</span>
     │       ├── <span class="file">firestore-db.js</span>  <span class="comment"># Firestore → db adapter</span>
     │       ├── <span class="file">firebase-auth.js</span> <span class="comment"># Firebase Auth services</span>
@@ -519,13 +529,11 @@ curl http://localhost:3001/api/auth/me \
             ├── <span class="file">AppRouter.jsx</span>    <span class="comment"># Dynamic plugin routing</span>
             ├── <span class="file">AuthContext.jsx</span>  <span class="comment"># Auth state management</span>
             ├── <span class="file">PluginContext.jsx</span> <span class="comment"># Plugin discovery</span>
-            ├── <span class="file">components.js</span>    <span class="comment"># Component registry</span>
+            ├── <span class="file">components.js</span>    <span class="comment"># Auto-discovery via import.meta.glob</span>
             ├── <span class="dir">layouts/</span>
             │   └── <span class="file">MainLayout.jsx</span>
             └── <span class="dir">pages/</span>
-                ├── <span class="file">LoginPage.jsx</span>
-                ├── <span class="file">DashboardPage.jsx</span>
-                └── <span class="file">RolesPage.jsx</span>
+                └── <span class="file">LoginPage.jsx</span>  <span class="comment"># Shell-owned (not a module)</span>
       </div>
     </section>
 
@@ -755,9 +763,9 @@ if (context.services.has('db')) {
             <td>Returns middleware that checks user has a specific role</td>
           </tr>
           <tr>
-            <td><span class="badge badge-service">firebase.admin</span></td>
+            <td><span class="badge badge-service">firebase.app</span></td>
             <td>module-firebase</td>
-            <td>Firebase Admin SDK app instance</td>
+            <td>Firebase app instance</td>
           </tr>
           <tr>
             <td><span class="badge badge-service">firebase.firestore</span></td>
@@ -767,7 +775,7 @@ if (context.services.has('db')) {
           <tr>
             <td><span class="badge badge-service">firebase.auth</span></td>
             <td>module-firebase</td>
-            <td>Firebase Admin Auth instance</td>
+            <td>Firebase Auth instance</td>
           </tr>
           <tr>
             <td><span class="badge badge-service">firebase.storage</span></td>
@@ -850,9 +858,12 @@ unsub();
     '@stratum/module-firebase': {
       enabled: false,
       options: {
-        credential: './service-account.json',
-        // databaseURL: 'https://&lt;project&gt;.firebaseio.com',
-        // storageBucket: '&lt;project&gt;.appspot.com',
+        apiKey: 'your-api-key',
+        authDomain: 'your-project.firebaseapp.com',
+        projectId: 'your-project-id',
+        storageBucket: 'your-project.firebasestorage.app',
+        messagingSenderId: '123456789',
+        appId: '1:123456789:web:abcdef',
       },
     },
   },
@@ -1020,7 +1031,7 @@ unsub();
       <h2>module-rbac</h2>
       <p>Role-based access control. Creates roles, permissions, and junction tables. Listens to <code>user.created</code> to auto-assign a default role.</p>
 
-      <p><strong>Dependencies:</strong> <code>module-db-sqlite</code>, <code>module-api</code>, <code>module-auth</code></p>
+      <p><strong>Dependencies:</strong> <code>module-api</code>, <code>module-auth</code></p>
 
       <h3>Services</h3>
       <table>
@@ -1110,7 +1121,7 @@ CREATE TABLE user_roles (
     <!-- ──── module-firebase ──── -->
     <section id="mod-firebase">
       <h2>module-firebase</h2>
-      <p>Full Firebase suite &mdash; Firestore, Authentication, and Cloud Storage. Uses the Firebase Admin SDK.</p>
+      <p>Full Firebase suite &mdash; Firestore, Authentication, and Cloud Storage. Uses the official Firebase JS SDK.</p>
 
       <p><strong>Dependencies:</strong> <code>module-api</code></p>
 
@@ -1123,10 +1134,10 @@ CREATE TABLE user_roles (
       <table>
         <thead><tr><th>Service</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><code>firebase.admin</code></td><td>App</td><td>Firebase Admin app instance</td></tr>
+          <tr><td><code>firebase.app</code></td><td>App</td><td>Firebase app instance</td></tr>
           <tr><td><code>firebase.firestore</code></td><td>Firestore</td><td>Firestore database instance for direct access</td></tr>
-          <tr><td><code>firebase.auth</code></td><td>Auth</td><td>Firebase Admin Auth for user management</td></tr>
-          <tr><td><code>firebase.storage</code></td><td>object</td><td>Cloud Storage service (only if <code>storageBucket</code> configured)</td></tr>
+          <tr><td><code>firebase.auth</code></td><td>Auth</td><td>Firebase Auth instance</td></tr>
+          <tr><td><code>firebase.storage</code></td><td>object</td><td>Cloud Storage service</td></tr>
         </tbody>
       </table>
 
@@ -1167,12 +1178,16 @@ const files = await storage.list('uploads/');
 await storage.delete('uploads/photo.jpg');</code></pre>
 
       <h3>Config</h3>
+      <p>Uses the standard Firebase web app configuration format:</p>
       <table>
         <thead><tr><th>Option</th><th>Type</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><code>credential</code></td><td>string | object</td><td>Path to service account JSON file, or inline credential object</td></tr>
-          <tr><td><code>databaseURL</code></td><td>string</td><td>Firebase Realtime Database URL</td></tr>
-          <tr><td><code>storageBucket</code></td><td>string</td><td>Cloud Storage bucket name (enables storage service)</td></tr>
+          <tr><td><code>apiKey</code></td><td>string</td><td>Firebase API key</td></tr>
+          <tr><td><code>authDomain</code></td><td>string</td><td>Firebase Auth domain (e.g., <code>project.firebaseapp.com</code>)</td></tr>
+          <tr><td><code>projectId</code></td><td>string</td><td>Firebase project ID</td></tr>
+          <tr><td><code>storageBucket</code></td><td>string</td><td>Cloud Storage bucket (e.g., <code>project.firebasestorage.app</code>)</td></tr>
+          <tr><td><code>messagingSenderId</code></td><td>string</td><td>Messaging sender ID</td></tr>
+          <tr><td><code>appId</code></td><td>string</td><td>Firebase app ID</td></tr>
         </tbody>
       </table>
     </section>
@@ -1182,26 +1197,38 @@ await storage.delete('uploads/photo.jpg');</code></pre>
     <!-- ──── ui-shell ──── -->
     <section id="mod-ui-shell">
       <h2>ui-shell</h2>
-      <p>React + Vite frontend application with dynamic plugin discovery. Not a traditional module &mdash; it&rsquo;s the frontend counterpart to the Kernel.</p>
+      <p>React + Vite frontend with <strong>fully modular UI</strong>. Not a traditional module &mdash; it&rsquo;s the frontend counterpart to the Kernel.</p>
 
       <h3>How It Works</h3>
       <ol style="margin: 12px 0 20px 24px; line-height: 2;">
         <li>On boot, fetches <code>GET /api/__plugins</code> to discover all module UI metadata</li>
         <li>Aggregates routes and nav items into <code>PluginContext</code></li>
         <li><code>AppRouter</code> dynamically generates React Router routes from plugin metadata</li>
-        <li>Components are lazy-loaded from the <code>components.js</code> registry</li>
+        <li><code>components.js</code> auto-discovers page components from <code>packages/*/ui/*.jsx</code> using Vite&rsquo;s <code>import.meta.glob</code></li>
+        <li>Auto-imports module CSS from <code>packages/*/ui/*.css</code> &mdash; modules can ship their own styles</li>
         <li><code>MainLayout</code> renders sidebar nav from plugin nav items</li>
       </ol>
+
+      <div class="callout">
+        <strong>Modular UI</strong>
+        Each module ships its own React pages in a <code>ui/</code> folder inside its package. The shell auto-discovers them at build time &mdash; no manual registration needed. The filename becomes the component name (e.g., <code>DashboardPage.jsx</code> &rarr; <code>DashboardPage</code>).
+      </div>
+
+      <div class="callout">
+        <strong>Hybrid CSS</strong>
+        The shell provides a design system (CSS variables, common component classes). Modules <strong>can</strong> add their own <code>.css</code> files in <code>ui/</code> for module-specific styles &mdash; they are auto-imported at build time. Use the shell&rsquo;s variables (<code>--bg</code>, <code>--surface</code>, <code>--border</code>, <code>--text</code>, <code>--primary</code>, <code>--radius</code>, etc.) for consistency.
+      </div>
 
       <h3>Key Files</h3>
       <table>
         <thead><tr><th>File</th><th>Purpose</th></tr></thead>
         <tbody>
           <tr><td><code>src/PluginContext.jsx</code></td><td>Fetches plugin metadata, provides routes/nav via React context</td></tr>
-          <tr><td><code>src/AuthContext.jsx</code></td><td>Auth state, token storage, <code>authFetch</code> helper</td></tr>
+          <tr><td><code>src/AuthContext.jsx</code></td><td>Auth state, token storage, <code>authFetch</code> helper (importable by module pages)</td></tr>
           <tr><td><code>src/AppRouter.jsx</code></td><td>Dynamic route generation with protected/public route separation</td></tr>
-          <tr><td><code>src/components.js</code></td><td>Maps component names from plugin metadata to lazy-loaded React components</td></tr>
+          <tr><td><code>src/components.js</code></td><td>Auto-discovers module UI components via <code>import.meta.glob</code></td></tr>
           <tr><td><code>src/layouts/MainLayout.jsx</code></td><td>App shell with sidebar, header, and content area</td></tr>
+          <tr><td><code>src/pages/LoginPage.jsx</code></td><td>Shell-owned login page (not part of a module)</td></tr>
         </tbody>
       </table>
 
@@ -1223,7 +1250,7 @@ await storage.delete('uploads/photo.jpg');</code></pre>
       <p>Step-by-step guide to creating a new Stratum module.</p>
 
       <h3>Step 1: Create the Package</h3>
-<pre><code>mkdir packages/module-my-feature</code></pre>
+<pre><code>mkdir -p packages/module-my-feature/ui</code></pre>
 
       <div class="code-title">packages/module-my-feature/package.json</div>
 <pre><code>{
@@ -1294,7 +1321,50 @@ await storage.delete('uploads/photo.jpg');</code></pre>
   async destroy() {},
 };</code></pre>
 
-      <h3>Step 3: Add to Config</h3>
+      <h3>Step 3: Add a UI Page (Optional)</h3>
+      <p>Create a React component in the module&rsquo;s <code>ui/</code> folder. The filename must match the <code>component</code> name in <code>ui.routes</code>. You can also add a <code>.css</code> file for module-specific styles.</p>
+      <div class="code-title">packages/module-my-feature/ui/MyFeaturePage.jsx</div>
+<pre><code>import { useState, useEffect } from 'react';
+import { useAuth } from '@stratum/ui-shell/src/AuthContext';
+
+export default function MyFeaturePage() {
+  const { authFetch } = useAuth();
+  const [items, setItems] = useState([]);
+
+  useEffect(() =&gt; {
+    authFetch('/api/my-feature')
+      .then(res =&gt; res.json())
+      .then(setItems);
+  }, [authFetch]);
+
+  return (
+    &lt;div className="page"&gt;
+      &lt;h2&gt;My Feature&lt;/h2&gt;
+      {items.map(item =&gt; (
+        &lt;p key={item.id}&gt;{item.name}&lt;/p&gt;
+      ))}
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+      <h3>Step 4: Add Module CSS (Optional)</h3>
+      <p>Drop a <code>.css</code> file in the module&rsquo;s <code>ui/</code> folder for module-specific styles. Use the shell&rsquo;s CSS variables for consistency.</p>
+      <div class="code-title">packages/module-my-feature/ui/styles.css</div>
+<pre><code>/* Use the shell's CSS variables for consistency */
+.my-feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.my-feature-highlight {
+  color: var(--primary);
+  font-weight: 600;
+}</code></pre>
+      <p>Any <code>.css</code> files in <code>ui/</code> are auto-imported at build time &mdash; no manual imports needed.</p>
+
+      <h3>Step 5: Add to Config</h3>
       <div class="code-title">stratum.config.js</div>
 <pre><code>'@stratum/module-my-feature': {
   enabled: true,
@@ -1303,11 +1373,11 @@ await storage.delete('uploads/photo.jpg');</code></pre>
   },
 },</code></pre>
 
-      <h3>Step 4: Install &amp; Run</h3>
+      <h3>Step 6: Install &amp; Run</h3>
 <pre><code>npm install
 node index.js</code></pre>
 
-      <p>The Kernel will automatically discover, sort, and boot your module.</p>
+      <p>The Kernel will automatically discover, sort, and boot your module. The UI page will be auto-discovered by the frontend &mdash; no changes to <code>ui-shell</code> needed.</p>
     </section>
 
     <hr>
@@ -1315,13 +1385,13 @@ node index.js</code></pre>
     <!-- ──── FRONTEND PLUGINS ──── -->
     <section id="frontend-plugins">
       <h2>Frontend Plugins</h2>
-      <p>Modules can contribute UI elements to the React frontend by exporting a <code>ui</code> property.</p>
+      <p>Modules ship their own React pages &mdash; no need to touch <code>ui-shell</code>. Just put <code>.jsx</code> files in your module&rsquo;s <code>ui/</code> folder.</p>
 
-      <h3>UI Metadata Format</h3>
+      <h3>Step 1: Declare UI Metadata</h3>
+      <p>In your module&rsquo;s <code>index.js</code>, export a <code>ui</code> property:</p>
 <pre><code>ui: {
   routes: [
     { path: '/my-page', component: 'MyPage' },
-    { path: '/login', component: 'LoginPage', public: true },
   ],
   nav: [
     { label: 'My Page', path: '/my-page', icon: 'Star' },
@@ -1332,7 +1402,7 @@ node index.js</code></pre>
         <thead><tr><th>Field</th><th>Description</th></tr></thead>
         <tbody>
           <tr><td><code>routes[].path</code></td><td>URL path for the route</td></tr>
-          <tr><td><code>routes[].component</code></td><td>Component name (must match a key in <code>components.js</code>)</td></tr>
+          <tr><td><code>routes[].component</code></td><td>Component name (must match the <code>.jsx</code> filename in <code>ui/</code>)</td></tr>
           <tr><td><code>routes[].public</code></td><td>If <code>true</code>, the route is accessible without authentication</td></tr>
           <tr><td><code>nav[].label</code></td><td>Display text in the sidebar</td></tr>
           <tr><td><code>nav[].path</code></td><td>Navigation target</td></tr>
@@ -1340,24 +1410,11 @@ node index.js</code></pre>
         </tbody>
       </table>
 
-      <h3>Registering the Component</h3>
-      <p>Add your page component to the component registry:</p>
-      <div class="code-title">packages/ui-shell/src/components.js</div>
-<pre><code>import { lazy } from 'react';
-
-const components = {
-  LoginPage: lazy(() =&gt; import('./pages/LoginPage')),
-  DashboardPage: lazy(() =&gt; import('./pages/DashboardPage')),
-  RolesPage: lazy(() =&gt; import('./pages/RolesPage')),
-  MyPage: lazy(() =&gt; import('./pages/MyPage')),  // &lt;-- add this
-};
-
-export default components;</code></pre>
-
-      <h3>Creating the Page Component</h3>
-      <div class="code-title">packages/ui-shell/src/pages/MyPage.jsx</div>
+      <h3>Step 2: Create the Page Component</h3>
+      <p>Put it in your module&rsquo;s <code>ui/</code> folder. The filename must match the <code>component</code> name declared above.</p>
+      <div class="code-title">packages/module-my-feature/ui/MyPage.jsx</div>
 <pre><code>import { useState, useEffect } from 'react';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '@stratum/ui-shell/src/AuthContext';
 
 export default function MyPage() {
   const { authFetch } = useAuth();
@@ -1379,18 +1436,92 @@ export default function MyPage() {
   );
 }</code></pre>
 
+      <div class="callout">
+        <strong>No registration needed</strong>
+        The <code>ui-shell</code> uses Vite&rsquo;s <code>import.meta.glob('../../*/ui/*.jsx')</code> to auto-discover all module pages at build time. The filename becomes the component name: <code>MyPage.jsx</code> &rarr; <code>'MyPage'</code>. Each page is automatically code-split into its own chunk. Module CSS files (<code>*.css</code>) in the same <code>ui/</code> folder are also auto-imported.
+      </div>
+
       <h3>How Discovery Works</h3>
       <div class="diagram">
-Backend                                     Frontend
+Backend (metadata)                          Frontend (components)
 
- Module A  ─┐                              PluginContext
- Module B  ─┤── ui metadata ──▶ GET /api/__plugins ──▶ routes[]
- Module C  ─┘                                          nav[]
-                                                        │
-                                              ┌─────────┴─────────┐
-                                              ▼                   ▼
-                                         AppRouter          MainLayout
-                                      (dynamic routes)    (sidebar nav)
+ Module A  ─┐                              import.meta.glob
+ Module B  ─┤── ui: { routes, nav }        packages/*/ui/*.jsx
+ Module C  ─┘        │                            │
+                     ▼                             ▼
+          GET /api/__plugins ──▶ PluginContext   components.js
+                                 routes[]       (auto-mapped)
+                                 nav[]               │
+                                   │          ┌──────┴──────┐
+                                   │          ▼             ▼
+                              ┌────┴────┐  AppRouter   MainLayout
+                              ▼         ▼  (renders)  (sidebar nav)
+                           routes     nav
+      </div>
+    </section>
+
+    <hr>
+
+    <!-- ──── CSS DESIGN SYSTEM ──── -->
+    <section id="css-design-system">
+      <h2>CSS Design System</h2>
+      <p>The <code>ui-shell</code> provides a design system that all modules should use for visual consistency. Modules <strong>can</strong> add their own CSS for custom components &mdash; just drop <code>.css</code> files in the module&rsquo;s <code>ui/</code> folder.</p>
+
+      <h3>How It Works</h3>
+      <ul style="margin: 12px 0 20px 24px; line-height: 2;">
+        <li><strong>Shell owns the design system</strong> &mdash; CSS variables, layout, and common component classes live in <code>ui-shell/src/styles.css</code></li>
+        <li><strong>Modules extend it</strong> &mdash; any <code>.css</code> files in a module&rsquo;s <code>ui/</code> folder are auto-imported via <code>import.meta.glob('../../*/ui/*.css', { eager: true })</code></li>
+        <li><strong>No manual imports</strong> &mdash; just create the file and it&rsquo;s included</li>
+      </ul>
+
+      <h3>CSS Variables</h3>
+      <table>
+        <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>--bg</code></td><td><code>#0f1117</code></td><td>Page background</td></tr>
+          <tr><td><code>--surface</code></td><td><code>#1a1d27</code></td><td>Card / panel background</td></tr>
+          <tr><td><code>--border</code></td><td><code>#2a2d3a</code></td><td>Border color</td></tr>
+          <tr><td><code>--text</code></td><td><code>#e1e4ed</code></td><td>Primary text</td></tr>
+          <tr><td><code>--text-muted</code></td><td><code>#8b8fa3</code></td><td>Secondary text</td></tr>
+          <tr><td><code>--primary</code></td><td><code>#6366f1</code></td><td>Accent color (indigo)</td></tr>
+          <tr><td><code>--primary-hover</code></td><td><code>#5558e6</code></td><td>Accent hover</td></tr>
+          <tr><td><code>--danger</code></td><td><code>#ef4444</code></td><td>Error / destructive</td></tr>
+          <tr><td><code>--success</code></td><td><code>#22c55e</code></td><td>Success / positive</td></tr>
+          <tr><td><code>--radius</code></td><td><code>8px</code></td><td>Border radius</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Reusable Classes</h3>
+      <table>
+        <thead><tr><th>Class</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td><code>.page</code></td><td>Page container with heading spacing</td></tr>
+          <tr><td><code>.stats-grid</code></td><td>Responsive grid for stat cards</td></tr>
+          <tr><td><code>.stat-card</code></td><td>Individual stat display (<code>.stat-value</code> + <code>.stat-label</code>)</td></tr>
+          <tr><td><code>.data-table</code></td><td>Styled table with hover rows and uppercase headers</td></tr>
+          <tr><td><code>.inline-form</code></td><td>Horizontal form layout</td></tr>
+          <tr><td><code>.error-msg</code></td><td>Error message banner</td></tr>
+        </tbody>
+      </table>
+
+      <h3>Example: Module CSS</h3>
+      <div class="code-title">packages/module-my-feature/ui/styles.css</div>
+<pre><code>/* Use the shell's CSS variables for consistency */
+.my-feature-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.my-feature-highlight {
+  color: var(--primary);
+  font-weight: 600;
+}</code></pre>
+
+      <div class="callout">
+        <strong>Prefix your classes</strong>
+        To avoid collisions between modules, prefix CSS class names with your module name (e.g., <code>.my-feature-card</code> instead of <code>.card</code>).
       </div>
     </section>
 
@@ -1407,7 +1538,7 @@ Backend                                     Frontend
       <div class="code-title">stratum.config.js</div>
 <pre><code>'@stratum/module-db-sqlite': { enabled: true },
 '@stratum/module-auth':      { enabled: true },
-'@stratum/module-firebase':  { enabled: true, options: { ... } },</code></pre>
+'@stratum/module-firebase':  { enabled: true, options: { apiKey: '...', projectId: '...', ... } },</code></pre>
 
       <table>
         <thead><tr><th>Service</th><th>Provider</th></tr></thead>
@@ -1426,7 +1557,7 @@ Backend                                     Frontend
       <div class="code-title">stratum.config.js</div>
 <pre><code>'@stratum/module-db-sqlite': { enabled: false },
 '@stratum/module-auth':      { enabled: false },
-'@stratum/module-firebase':  { enabled: true, options: { ... } },</code></pre>
+'@stratum/module-firebase':  { enabled: true, options: { apiKey: '...', projectId: '...', ... } },</code></pre>
 
       <table>
         <thead><tr><th>Service</th><th>Provider</th></tr></thead>
