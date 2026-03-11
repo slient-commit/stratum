@@ -735,7 +735,7 @@ if (context.services.has('db')) {
           <tr>
             <td><span class="badge badge-service">db</span></td>
             <td>module-db-sqlite</td>
-            <td>Database interface: <code>run()</code>, <code>get()</code>, <code>all()</code>, <code>exec()</code></td>
+            <td>Standard Database Interface: <code>select</code>, <code>selectAll</code>, <code>insert</code>, <code>update</code>, <code>delete</code>, <code>createTable</code>, <code>count</code>, &hellip;</td>
           </tr>
           <tr>
             <td><span class="badge badge-service">api.app</span></td>
@@ -894,21 +894,47 @@ unsub();
     <!-- ──── module-db-sqlite ──── -->
     <section id="mod-db-sqlite">
       <h2>module-db-sqlite</h2>
-      <p>SQLite database adapter using <code>better-sqlite3</code>. Registers the <code>db</code> service with a clean wrapper API.</p>
+      <p>SQLite database adapter using <code>better-sqlite3</code>. Implements the <strong>Standard Database Interface</strong> &mdash; all database adapters share the same API.</p>
 
-      <h3>Services</h3>
+      <h3>Standard Database Interface</h3>
+      <p>All <code>db</code> methods must be <code>await</code>ed. The <code>where</code> parameter is an object of <code>{ column: value }</code> pairs (AND equality).</p>
       <table>
         <thead>
           <tr><th>Method</th><th>Signature</th><th>Returns</th><th>Description</th></tr>
         </thead>
         <tbody>
-          <tr><td><code>db.run</code></td><td><code>(sql, params?)</code></td><td><code>{ lastInsertRowid, changes }</code></td><td>Execute INSERT, UPDATE, DELETE</td></tr>
-          <tr><td><code>db.get</code></td><td><code>(sql, params?)</code></td><td><code>object | undefined</code></td><td>Fetch single row</td></tr>
-          <tr><td><code>db.all</code></td><td><code>(sql, params?)</code></td><td><code>object[]</code></td><td>Fetch all matching rows</td></tr>
-          <tr><td><code>db.exec</code></td><td><code>(sql)</code></td><td><code>void</code></td><td>Execute raw SQL (DDL, multi-statement)</td></tr>
-          <tr><td><code>db.raw</code></td><td>&mdash;</td><td><code>Database</code></td><td>Underlying better-sqlite3 instance</td></tr>
+          <tr><td colspan="4" style="color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Schema Management</td></tr>
+          <tr><td><code>db.createTable</code></td><td><code>(table, columns)</code></td><td><code>void</code></td><td>Create table with structured schema</td></tr>
+          <tr><td><code>db.alterTable</code></td><td><code>(table, changes)</code></td><td><code>void</code></td><td>Add columns to existing table</td></tr>
+          <tr><td><code>db.dropTable</code></td><td><code>(table)</code></td><td><code>void</code></td><td>Drop table / delete collection</td></tr>
+          <tr><td><code>db.tableExists</code></td><td><code>(table)</code></td><td><code>boolean</code></td><td>Check if table exists</td></tr>
+          <tr><td><code>db.listTables</code></td><td><code>()</code></td><td><code>string[]</code></td><td>List all table names</td></tr>
+          <tr><td><code>db.exec</code></td><td><code>(sql)</code></td><td><code>void</code></td><td>Raw DDL escape hatch</td></tr>
+          <tr><td colspan="4" style="color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">CRUD</td></tr>
+          <tr><td><code>db.insert</code></td><td><code>(table, data)</code></td><td><code>{ id }</code></td><td>Insert a row</td></tr>
+          <tr><td><code>db.insertMany</code></td><td><code>(table, rows)</code></td><td><code>{ count }</code></td><td>Bulk insert multiple rows</td></tr>
+          <tr><td><code>db.select</code></td><td><code>(table, where, columns?)</code></td><td><code>object | undefined</code></td><td>Fetch single row</td></tr>
+          <tr><td><code>db.selectAll</code></td><td><code>(table, where?, options?)</code></td><td><code>object[]</code></td><td>Fetch multiple rows</td></tr>
+          <tr><td><code>db.update</code></td><td><code>(table, where, data)</code></td><td><code>{ changes }</code></td><td>Update matching rows</td></tr>
+          <tr><td><code>db.delete</code></td><td><code>(table, where)</code></td><td><code>{ changes }</code></td><td>Delete matching rows</td></tr>
+          <tr><td><code>db.deleteAll</code></td><td><code>(table)</code></td><td><code>{ changes }</code></td><td>Delete all rows (truncate)</td></tr>
+          <tr><td><code>db.upsert</code></td><td><code>(table, data, conflictKeys)</code></td><td><code>{ id, changes }</code></td><td>Insert or ignore if conflict</td></tr>
+          <tr><td colspan="4" style="color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Aggregation</td></tr>
+          <tr><td><code>db.count</code></td><td><code>(table, where?)</code></td><td><code>number</code></td><td>Count rows</td></tr>
+          <tr><td><code>db.exists</code></td><td><code>(table, where)</code></td><td><code>boolean</code></td><td>Check if row exists</td></tr>
+          <tr><td colspan="4" style="color: var(--text-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;">Escape Hatch</td></tr>
+          <tr><td><code>db.query</code></td><td><code>(sql, params?)</code></td><td><code>object[]</code></td><td>Raw SQL for complex queries (JOINs, OR, etc.)</td></tr>
         </tbody>
       </table>
+
+      <p><code>selectAll</code> options: <code>{ columns, orderBy, order, limit, offset }</code></p>
+      <p>Column schema types: <code>integer</code>, <code>text</code>, <code>real</code>, <code>boolean</code>, <code>datetime</code>, <code>blob</code></p>
+      <p>Column options: <code>{ type, primaryKey, autoIncrement, unique, required, default, references }</code></p>
+
+      <div class="callout">
+        <strong>Adapter portability</strong>
+        Use the structured methods (<code>select</code>, <code>insert</code>, etc.) for cross-adapter compatibility. The <code>query()</code> escape hatch only works with SQL databases &mdash; the Firestore adapter will throw on it.
+      </div>
 
       <h3>Config</h3>
       <table>
@@ -1146,7 +1172,7 @@ CREATE TABLE user_roles (
       <table>
         <thead><tr><th>Service</th><th>Condition</th><th>Description</th></tr></thead>
         <tbody>
-          <tr><td><code>db</code></td><td><code>module-db-sqlite</code> disabled</td><td>Firestore adapter with SQL-compatible <code>run/get/all/exec</code> interface</td></tr>
+          <tr><td><code>db</code></td><td><code>module-db-sqlite</code> disabled</td><td>Firestore adapter implementing the Standard Database Interface</td></tr>
           <tr><td><code>auth.verifyToken</code></td><td><code>module-auth</code> disabled</td><td>Firebase ID token verification</td></tr>
           <tr><td><code>auth.requireAuth</code></td><td><code>module-auth</code> disabled</td><td>Express middleware using Firebase Auth</td></tr>
         </tbody>
@@ -1284,13 +1310,11 @@ await storage.delete('uploads/photo.jpg');</code></pre>
   async init(context) {
     // Set up database tables
     const db = context.services.get('db');
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS my_items (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    await db.createTable('my_items', {
+      id: { type: 'integer', primaryKey: true, autoIncrement: true },
+      name: { type: 'text', required: true },
+      created_at: { type: 'datetime', default: 'CURRENT_TIMESTAMP' },
+    });
     context.logger.info('Tables ready');
   },
 
@@ -1301,17 +1325,15 @@ await storage.delete('uploads/photo.jpg');</code></pre>
     const requireAuth = context.services.get('auth.requireAuth');
     const db = context.services.get('db');
 
-    router.get('/', requireAuth, (req, res) =&gt; {
-      const items = db.all('SELECT * FROM my_items');
+    router.get('/', requireAuth, async (req, res) =&gt; {
+      const items = await db.selectAll('my_items');
       res.json(items);
     });
 
-    router.post('/', requireAuth, (req, res) =&gt; {
+    router.post('/', requireAuth, async (req, res) =&gt; {
       const { name } = req.body;
-      const result = db.run(
-        'INSERT INTO my_items (name) VALUES (?)', [name]
-      );
-      res.status(201).json({ id: Number(result.lastInsertRowid), name });
+      const { id } = await db.insert('my_items', { name });
+      res.status(201).json({ id, name });
     });
 
     registerRouter('/api/my-feature', router);

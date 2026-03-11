@@ -2,7 +2,7 @@ const createRbacRoutes = require('./routes');
 
 module.exports = {
   name: 'module-rbac',
-  version: '1.0.0',
+  version: '2.0.0',
   dependencies: ['module-db-sqlite', 'module-api', 'module-auth'],
 
   ui: {
@@ -13,18 +13,16 @@ module.exports = {
   async register(context) {
     // Expose a middleware that checks user role
     context.services.register('rbac.requireRole', (roleName) => {
-      return (req, res, next) => {
+      return async (req, res, next) => {
         if (!req.user) {
           return res.status(401).json({ error: 'Authentication required' });
         }
         const db = context.services.get('db');
-        const role = db.get(
-          `SELECT 1 FROM user_roles ur
-           JOIN roles r ON r.id = ur.role_id
-           WHERE ur.user_id = ? AND r.name = ?`,
-          [req.user.id, roleName]
-        );
-        if (!role) {
+        const role = await db.select('roles', { name: roleName }, ['id']);
+        const hasRole = role
+          ? await db.exists('user_roles', { user_id: req.user.id, role_id: role.id })
+          : false;
+        if (!hasRole) {
           return res.status(403).json({ error: `Role "${roleName}" required` });
         }
         next();
@@ -37,46 +35,32 @@ module.exports = {
   async init(context) {
     const db = context.services.get('db');
 
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS roles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT UNIQUE NOT NULL,
-        description TEXT DEFAULT ''
-      );
+    await db.createTable('roles', {
+      id: { type: 'integer', primaryKey: true, autoIncrement: true },
+      name: { type: 'text', unique: true, required: true },
+      description: { type: 'text', default: '' },
+    });
 
-      CREATE TABLE IF NOT EXISTS permissions (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT UNIQUE NOT NULL,
-        description TEXT DEFAULT ''
-      );
+    await db.createTable('permissions', {
+      id: { type: 'integer', primaryKey: true, autoIncrement: true },
+      name: { type: 'text', unique: true, required: true },
+      description: { type: 'text', default: '' },
+    });
 
-      CREATE TABLE IF NOT EXISTS role_permissions (
-        role_id INTEGER NOT NULL,
-        permission_id INTEGER NOT NULL,
-        PRIMARY KEY (role_id, permission_id),
-        FOREIGN KEY (role_id) REFERENCES roles(id),
-        FOREIGN KEY (permission_id) REFERENCES permissions(id)
-      );
+    await db.createTable('role_permissions', {
+      role_id: { type: 'integer', required: true, references: { table: 'roles', column: 'id' } },
+      permission_id: { type: 'integer', required: true, references: { table: 'permissions', column: 'id' } },
+    });
 
-      CREATE TABLE IF NOT EXISTS user_roles (
-        user_id INTEGER NOT NULL,
-        role_id INTEGER NOT NULL,
-        PRIMARY KEY (user_id, role_id),
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        FOREIGN KEY (role_id) REFERENCES roles(id)
-      );
-    `);
+    await db.createTable('user_roles', {
+      user_id: { type: 'integer', required: true, references: { table: 'users', column: 'id' } },
+      role_id: { type: 'integer', required: true, references: { table: 'roles', column: 'id' } },
+    });
 
     // Seed default roles
     const defaultRole = context.config.defaultRole || 'user';
-    db.run('INSERT OR IGNORE INTO roles (name, description) VALUES (?, ?)', [
-      defaultRole,
-      'Default user role',
-    ]);
-    db.run('INSERT OR IGNORE INTO roles (name, description) VALUES (?, ?)', [
-      'admin',
-      'Administrator role',
-    ]);
+    await db.upsert('roles', { name: defaultRole, description: 'Default user role' }, ['name']);
+    await db.upsert('roles', { name: 'admin', description: 'Administrator role' }, ['name']);
 
     context.logger.info('RBAC tables ready');
   },
@@ -88,12 +72,12 @@ module.exports = {
 
     // Auto-assign default role on user creation
     const defaultRole = context.config.defaultRole || 'user';
-    context.events.on('user.created', (user) => {
-      const role = db.get('SELECT id FROM roles WHERE name = ?', [defaultRole]);
+    context.events.on('user.created', async (user) => {
+      const role = await db.select('roles', { name: defaultRole }, ['id']);
       if (role) {
-        db.run('INSERT OR IGNORE INTO user_roles (user_id, role_id) VALUES (?, ?)', [
-          user.id,
-          role.id,
+        await db.upsert('user_roles', { user_id: user.id, role_id: role.id }, [
+          'user_id',
+          'role_id',
         ]);
         context.logger.info(`Assigned role "${defaultRole}" to user ${user.username}`);
       }

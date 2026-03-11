@@ -16,21 +16,17 @@ module.exports = function createAuthRoutes(db, config, events) {
         return res.status(400).json({ error: 'username, email, and password are required' });
       }
 
-      const existing = db.get(
-        'SELECT id FROM users WHERE username = ? OR email = ?',
-        [username, email]
-      );
-      if (existing) {
+      // Check for existing user (OR condition — two selects for cross-adapter compatibility)
+      const byName = await db.select('users', { username }, ['id']);
+      const byEmail = !byName ? await db.select('users', { email }, ['id']) : null;
+      if (byName || byEmail) {
         return res.status(409).json({ error: 'User already exists' });
       }
 
       const hash = await bcrypt.hash(password, 10);
-      const result = db.run(
-        'INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)',
-        [username, email, hash]
-      );
+      const { id } = await db.insert('users', { username, email, password_hash: hash });
 
-      const user = { id: Number(result.lastInsertRowid), username, email };
+      const user = { id, username, email };
 
       await events.emit('user.created', user);
 
@@ -50,7 +46,7 @@ module.exports = function createAuthRoutes(db, config, events) {
         return res.status(400).json({ error: 'username and password are required' });
       }
 
-      const user = db.get('SELECT * FROM users WHERE username = ?', [username]);
+      const user = await db.select('users', { username });
       if (!user) {
         return res.status(401).json({ error: 'Invalid credentials' });
       }
@@ -74,7 +70,7 @@ module.exports = function createAuthRoutes(db, config, events) {
   });
 
   // Get current user
-  router.get('/me', (req, res) => {
+  router.get('/me', async (req, res) => {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       return res.status(401).json({ error: 'No token provided' });
@@ -82,8 +78,11 @@ module.exports = function createAuthRoutes(db, config, events) {
 
     try {
       const decoded = jwt.verify(authHeader.split(' ')[1], secret);
-      const user = db.get('SELECT id, username, email, created_at FROM users WHERE id = ?', [
-        decoded.id,
+      const user = await db.select('users', { id: decoded.id }, [
+        'id',
+        'username',
+        'email',
+        'created_at',
       ]);
       if (!user) return res.status(404).json({ error: 'User not found' });
       res.json(user);

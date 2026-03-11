@@ -1,3 +1,4 @@
 const Kernel = require('./lib/Kernel');
+const DatabaseInterface = require('./lib/DatabaseInterface');
 
-module.exports = { Kernel };
+module.exports = { Kernel, DatabaseInterface };

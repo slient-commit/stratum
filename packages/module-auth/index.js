@@ -40,15 +40,13 @@ module.exports = {
   async init(context) {
     const db = context.services.get('db');
 
-    db.exec(`
-      CREATE TABLE IF NOT EXISTS users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        username TEXT UNIQUE NOT NULL,
-        email TEXT UNIQUE NOT NULL,
-        password_hash TEXT NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+    await db.createTable('users', {
+      id: { type: 'integer', primaryKey: true, autoIncrement: true },
+      username: { type: 'text', unique: true, required: true },
+      email: { type: 'text', unique: true, required: true },
+      password_hash: { type: 'text', required: true },
+      created_at: { type: 'datetime', default: 'CURRENT_TIMESTAMP' },
+    });
 
     context.logger.info('Users table ready');
   },

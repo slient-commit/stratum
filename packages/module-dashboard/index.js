@@ -1,6 +1,6 @@
 module.exports = {
   name: 'module-dashboard',
-  version: '1.0.0',
+  version: '2.0.0',
   dependencies: ['module-api', 'module-auth'],
 
   ui: {
@@ -20,14 +20,14 @@ module.exports = {
     const { Router } = require('express');
     const router = Router();
 
-    router.get('/stats', requireAuth, (req, res) => {
+    router.get('/stats', requireAuth, async (req, res) => {
       const db = context.services.get('db');
-      const userCount = db.get('SELECT COUNT(*) as count FROM users');
-      const roleCount = db.get('SELECT COUNT(*) as count FROM roles');
+      const users = await db.count('users');
+      const roles = await db.count('roles');
 
       res.json({
-        users: userCount.count,
-        roles: roleCount.count,
+        users,
+        roles,
         uptime: process.uptime(),
       });
     });

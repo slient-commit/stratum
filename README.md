@@ -160,17 +160,41 @@ Set `enabled: false` to disable any module without removing code.
 
 ### module-db-sqlite
 
-SQLite database adapter using `better-sqlite3`.
+SQLite database adapter using `better-sqlite3`. Implements the **Standard Database Interface**.
 
 **Services registered:** `db`
 
 | Method | Description |
 |--------|-------------|
-| `db.run(sql, params)` | Execute INSERT/UPDATE/DELETE, returns `{ lastInsertRowid, changes }` |
-| `db.get(sql, params)` | Fetch single row, returns object or `undefined` |
-| `db.all(sql, params)` | Fetch all rows, returns array |
-| `db.exec(sql)` | Execute raw SQL (DDL, multi-statement) |
-| `db.raw` | Underlying `better-sqlite3` instance |
+| **Schema** | |
+| `db.createTable(table, columns)` | Create table with structured schema |
+| `db.alterTable(table, changes)` | Add columns to existing table |
+| `db.dropTable(table)` | Drop table / delete collection |
+| `db.tableExists(table)` | Check if table exists, returns boolean |
+| `db.listTables()` | List all table names, returns `string[]` |
+| `db.exec(sql)` | Execute raw DDL (escape hatch) |
+| **CRUD** | |
+| `db.insert(table, data)` | Insert a row, returns `{ id }` |
+| `db.insertMany(table, rows)` | Bulk insert, returns `{ count }` |
+| `db.select(table, where, columns?)` | Fetch single row, returns object or `undefined` |
+| `db.selectAll(table, where?, options?)` | Fetch multiple rows, returns array |
+| `db.update(table, where, data)` | Update matching rows, returns `{ changes }` |
+| `db.delete(table, where)` | Delete matching rows, returns `{ changes }` |
+| `db.deleteAll(table)` | Delete all rows (truncate), returns `{ changes }` |
+| `db.upsert(table, data, conflictKeys)` | Insert or ignore if conflict, returns `{ id, changes }` |
+| **Aggregation** | |
+| `db.count(table, where?)` | Count rows, returns number |
+| `db.exists(table, where)` | Check existence, returns boolean |
+| **Escape Hatch** | |
+| `db.query(sql, params?)` | Raw SQL for complex queries (JOINs, OR, etc.), returns array |
+
+**`where` parameter:** `{ column: value, ... }` — all conditions use AND equality.
+
+**`options` parameter:** `{ columns, orderBy, order, limit, offset }`
+
+**Column schema** (for `createTable`/`alterTable`): `{ type, primaryKey, autoIncrement, unique, required, default, references }`
+
+Supported types: `integer`, `text`, `real`, `boolean`, `datetime`, `blob`
 
 **Config options:**
 
@@ -291,7 +315,7 @@ Full Firebase suite using the official Firebase JS SDK — Firestore, Authentica
 
 | Service | Condition | Description |
 |---------|-----------|-------------|
-| `db` | `module-db-sqlite` disabled | Firestore adapter with SQL-compatible interface |
+| `db` | `module-db-sqlite` disabled | Firestore adapter implementing the Standard Database Interface |
 | `auth.verifyToken` | `module-auth` disabled | Firebase ID token verification |
 | `auth.requireAuth` | `module-auth` disabled | Firebase auth middleware |
 
@@ -369,7 +393,10 @@ module.exports = {
   async init(context) {
     // Set up resources (create tables, connect to APIs, etc.)
     const db = context.services.get('db');
-    db.exec('CREATE TABLE IF NOT EXISTS my_table (id INTEGER PRIMARY KEY, name TEXT)');
+    await db.createTable('my_table', {
+      id: { type: 'integer', primaryKey: true, autoIncrement: true },
+      name: { type: 'text', required: true },
+    });
   },
 
   async start(context) {
@@ -378,9 +405,16 @@ module.exports = {
     const router = Router();
     const registerRouter = context.services.get('api.registerRouter');
     const requireAuth = context.services.get('auth.requireAuth');
+    const db = context.services.get('db');
 
-    router.get('/', requireAuth, (req, res) => {
-      res.json({ message: 'Hello from my-feature!' });
+    router.get('/', requireAuth, async (req, res) => {
+      const items = await db.selectAll('my_table');
+      res.json(items);
+    });
+
+    router.post('/', requireAuth, async (req, res) => {
+      const { id } = await db.insert('my_table', { name: req.body.name });
+      res.status(201).json({ id, name: req.body.name });
     });
 
     registerRouter('/api/my-feature', router);
@@ -494,6 +528,51 @@ The `ui-shell` provides a design system that all modules should use for visual c
 ---
 
 ## API Reference
+
+### Standard Database Interface
+
+All database adapters implement this interface. Always `await` every call.
+
+```js
+const db = context.services.get('db');
+
+// Schema management
+await db.createTable('products', {
+  id: { type: 'integer', primaryKey: true, autoIncrement: true },
+  name: { type: 'text', required: true },
+  price: { type: 'real', default: 0 },
+})
+await db.alterTable('products', { add: { sku: { type: 'text', unique: true } } })
+await db.dropTable('old_table')
+await db.tableExists('products')              // → true
+await db.listTables()                         // → ['products', 'users', ...]
+
+// CRUD
+await db.insert('users', { name: 'Alice' })   // → { id: 1 }
+await db.insertMany('users', [                // → { count: 2 }
+  { name: 'Bob' }, { name: 'Carol' },
+])
+await db.select('users', { id: 1 })           // → { id: 1, name: 'Alice' } or undefined
+await db.select('users', { id: 1 }, ['name']) // → { name: 'Alice' } (specific columns)
+await db.selectAll('roles')                   // → [{ id: 1, name: 'admin' }, ...]
+await db.selectAll('users', {}, {             // With options:
+  orderBy: 'created_at', order: 'desc',       //   sorting
+  limit: 10, offset: 0,                       //   pagination
+  columns: ['id', 'name'],                    //   column selection
+})
+await db.update('users', { id: 1 }, { name: 'Bob' })  // → { changes: 1 }
+await db.delete('users', { id: 1 })                    // → { changes: 1 }
+await db.deleteAll('temp_data')                         // → { changes: N }
+await db.upsert('roles', { name: 'admin' }, ['name'])  // → { id, changes } (0 if existed)
+
+// Aggregation
+await db.count('users')                       // → 42
+await db.count('users', { role: 'admin' })    // → 3
+await db.exists('users', { username: 'alice'})// → true
+
+// Escape hatch (raw SQL — not portable to non-SQL adapters)
+await db.query('SELECT ... JOIN ...', [params])  // → [rows]
+```
 
 ### Service Registry
 
